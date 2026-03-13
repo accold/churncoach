@@ -485,10 +485,10 @@ async function loadData() {
     }
     updateBanner('live', json.liveCount, json.cardCount, dataInfo.updatedAt);
   } catch (err) {
-    CARDS = FALLBACK_CARDS;
+    CARDS = [];
     dataInfo.status = 'offline';
-    setStatus('offline', 'Using cached data — click to retry');
-    updateBanner('error', 0, FALLBACK_CARDS.length, null);
+    setStatus('offline', 'Live data unavailable — click to retry');
+    updateBanner('error', 0, 0, null);
   }
 }
 
@@ -515,20 +515,9 @@ async function refreshData() {
   if (activePage && activePage.id === 'cards') filterCards(document.querySelector('.filter-bar .btn.on'), 'all');
 }
 
-var FALLBACK_CARDS = [
-  { id:'csp', applyUrl:'https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred', bank:'Chase', name:'Sapphire Preferred', type:'travel', bonus:750, bonusPts:'75,000 pts', minSpend:5000, days:90, fee:95, credits:50, cats:['travel','dining'], hasTransfers:true, rule524:true, minScore:700, roi:7.4, isBiz:false, easyMin:false, netVal:705, dataSource:'fallback', why:'Best starter travel card. $50 hotel credit offsets fee. Points transfer to 14 airlines/hotels.' },
-  { id:'csr', applyUrl:'https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve', bank:'Chase', name:'Sapphire Reserve', type:'travel', bonus:750, bonusPts:'60,000 pts', minSpend:4000, days:90, fee:550, credits:300, cats:['travel','dining'], hasTransfers:true, rule524:true, minScore:720, roi:6.8, isBiz:false, easyMin:false, netVal:500, dataSource:'fallback', why:'$300 travel credit makes effective fee $250. Priority Pass lounge access.' },
-  { id:'ibp', applyUrl:'https://creditcards.chase.com/business-credit-cards/ink/preferred', bank:'Chase', name:'Ink Business Preferred', type:'business', bonus:1000, bonusPts:'100,000 pts', minSpend:8000, days:90, fee:95, credits:0, cats:['travel','online','office'], hasTransfers:true, rule524:false, minScore:700, roi:10.1, isBiz:true, easyMin:false, netVal:905, dataSource:'fallback', why:'DOES NOT count toward 5/24. Best bonus-to-fee ratio available.' },
-  { id:'ibu', applyUrl:'https://creditcards.chase.com/business-credit-cards/ink/unlimited', bank:'Chase', name:'Ink Business Unlimited', type:'business', bonus:750, bonusPts:'$750 cash', minSpend:6000, days:90, fee:0, credits:0, cats:['online','office'], hasTransfers:false, rule524:false, minScore:680, roi:9.2, isBiz:true, easyMin:false, netVal:750, dataSource:'fallback', why:'No fee. Does NOT count toward 5/24.' },
-  { id:'ff', applyUrl:'https://creditcards.chase.com/cash-back-credit-cards/freedom/flex', bank:'Chase', name:'Freedom Flex', type:'cashback', bonus:200, bonusPts:'$200 cash', minSpend:500, days:90, fee:0, credits:0, cats:['grocery','dining','online'], hasTransfers:false, rule524:true, minScore:670, roi:8.5, isBiz:false, easyMin:true, netVal:200, dataSource:'fallback', why:'Only $500 minimum — easiest bonus to hit.' },
-  { id:'amexplat', applyUrl:'https://www.americanexpress.com/us/credit-cards/card/platinum/', bank:'Amex', name:'Platinum Card', type:'travel', bonus:1500, bonusPts:'150,000 pts', minSpend:8000, days:180, fee:695, credits:600, cats:['travel'], hasTransfers:true, rule524:false, minScore:720, roi:8.6, isBiz:false, easyMin:false, netVal:1405, dataSource:'fallback', why:'Highest absolute welcome offer. Centurion Lounge access.' },
-  { id:'amexgold', applyUrl:'https://www.americanexpress.com/us/credit-cards/card/gold-card/', bank:'Amex', name:'Gold Card', type:'travel', bonus:600, bonusPts:'60,000 pts', minSpend:6000, days:180, fee:250, credits:240, cats:['dining','grocery'], hasTransfers:true, rule524:false, minScore:700, roi:7.2, isBiz:false, easyMin:false, netVal:590, dataSource:'fallback', why:'4x on dining and US groceries. $120 dining credit.' },
-  { id:'venturex', applyUrl:'https://creditcards.capitalone.com/venture-x-credit-card/', bank:'Capital One', name:'Venture X', type:'travel', bonus:750, bonusPts:'75,000 miles', minSpend:4000, days:90, fee:395, credits:300, cats:['travel'], hasTransfers:true, rule524:false, minScore:720, roi:8.1, isBiz:false, easyMin:false, netVal:655, dataSource:'fallback', why:'$300 travel credit + anniversary miles effectively eliminate the fee.' },
-  { id:'strata', applyUrl:'https://www.citi.com/credit-cards/citi-strata-premier-credit-card', bank:'Citi', name:'Strata Premier', type:'travel', bonus:600, bonusPts:'75,000 pts', minSpend:4000, days:90, fee:95, credits:100, cats:['travel','dining','grocery','gas'], hasTransfers:true, rule524:false, minScore:700, roi:7.9, isBiz:false, easyMin:false, netVal:605, dataSource:'fallback', why:'Citi 48-month rule. Turkish Airlines transfer sweet spot.' },
-  { id:'doubecash', applyUrl:'https://www.citi.com/credit-cards/citi-double-cash-credit-card', bank:'Citi', name:'Double Cash', type:'cashback', bonus:200, bonusPts:'$200 cash', minSpend:1500, days:90, fee:0, credits:0, cats:['everything'], hasTransfers:false, rule524:false, minScore:670, roi:7.2, isBiz:false, easyMin:true, netVal:200, dataSource:'fallback', why:'2% on everything, no fee.' },
-  { id:'wfaj', applyUrl:'https://creditcards.wellsfargo.com/autograph-journey-visa-credit-card/', bank:'Wells Fargo', name:'Autograph Journey', type:'travel', bonus:400, bonusPts:'60,000 pts', minSpend:4000, days:90, fee:95, credits:50, cats:['hotels','dining','travel'], hasTransfers:true, rule524:false, minScore:690, roi:6.5, isBiz:false, easyMin:false, netVal:355, dataSource:'fallback', why:'Wells Fargo has NO velocity rules. Most forgiving major bank.' },
-  { id:'barcavoy', applyUrl:'https://cards.barclaycardus.com/banking/cards/aadvantage-aviator-red-world-elite-mastercard/', bank:'Barclays', name:'AAdvantage Aviator Red', type:'travel', bonus:600, bonusPts:'60,000 miles', minSpend:0, days:90, fee:99, credits:0, cats:['travel'], hasTransfers:false, rule524:false, minScore:680, roi:7.8, isBiz:false, easyMin:true, netVal:501, dataSource:'fallback', why:'Bonus after first purchase only — no min spend.' },
-];
+var FALLBACK_CARDS = [];
+// No fallback data — cards are only shown with live scraped bonus amounts.
+// If the data fetch fails, the app shows an error rather than stale numbers.
 
 function getChipVals(id) {
   return Array.from(document.querySelectorAll('#' + id + ' .chip.on')).map(function(c) { return c.dataset.val; });
