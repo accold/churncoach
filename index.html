@@ -12,7 +12,7 @@
   --card:#111120;--warn:#ffb800;--danger:#ff4455;--good:#00ff88;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh;}
+body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
 nav{display:flex;align-items:center;justify-content:space-between;padding:18px 36px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(8,8,14,0.93);backdrop-filter:blur(24px);z-index:100;}
 .logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.25rem;letter-spacing:-.02em;}
@@ -52,7 +52,7 @@ select option{background:var(--surface2);}
 .btn-o:hover{border-color:var(--accent);color:var(--accent);}
 .btn-o.on{border-color:var(--accent);color:var(--accent);background:rgba(0,255,136,.06);}
 .btn-sm{padding:7px 14px;font-size:.7rem;}
-.result-panel{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:28px;margin-top:28px;display:none;}
+.result-panel{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:28px;margin-top:28px;display:none;overflow-x:hidden;}
 .result-panel.on{display:block;animation:up .35s ease;}
 .rp-head{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);}
 .rp-icon{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;}
@@ -146,7 +146,7 @@ select option{background:var(--surface2);}
 .tip-box{font-size:.75rem;color:var(--muted);line-height:1.8;padding:12px;background:var(--surface);border-radius:8px;}
 .ongoing-row{padding:10px 0;border-top:1px solid var(--border);font-size:.75rem;line-height:1.7;}
 .cycle-step{padding:12px;background:var(--surface);border-radius:8px;font-size:.78rem;line-height:1.75;color:var(--muted);margin-bottom:8px;}
-@media(max-width:768px){
+@media(max-width:900px){
   nav{padding:14px 18px;flex-wrap:wrap;gap:10px;}
   .page{padding:20px 16px;}
   .grid2,.rec-grid,.stat-grid,.score-row,.money-grid,.travel-grid{grid-template-columns:1fr;}
