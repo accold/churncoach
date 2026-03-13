@@ -496,7 +496,7 @@ function runEngine() {
     if (goals.indexOf('biz') !== -1 && c.hasTransfers) { score += 30; goalHits++; }
     if (goals.indexOf('hotels') !== -1 && ['csr','venturex','amexplat'].indexOf(c.id) !== -1) { score += 28; goalHits++; flags.push({ t:'good', m:'✅ Great for hotel bookings' }); }
     if (goals.indexOf('lounge') !== -1 && ['csr','amexplat','venturex'].indexOf(c.id) !== -1) { score += 32; goalHits++; flags.push({ t:'good', m:'✅ Includes lounge access' }); }
-    // penalize cards that don't match any goal
+    // penalize cards that do not match any goal
     if (goals.length > 0 && goalHits === 0) score -= 20;
 
     // ── SPENDING CATEGORIES (second biggest driver) ──
@@ -588,7 +588,7 @@ function runEngine() {
   if (cards524 >= 5) warns.push({ sev:'red', icon:'🚨', msg:'You are over Chase 5/24. All Chase personal cards are blocked. Focus entirely on non-5/24 cards below.' });
   if (cards524 === 4) warns.push({ sev:'red', icon:'🔥', msg:'ONE Chase slot left. Use it on the highest-value Chase card, then shift to non-5/24 cards.' });
   if (cards524 <= 2) warns.push({ sev:'green', icon:'✅', msg:'You have ' + slotsLeft + ' Chase slots. Hit all Chase cards first — they have the best transfer partners.' });
-  if (!hasBiz) warns.push({ sev:'purple', icon:'💡', msg:"Chase Ink business cards don't require an incorporated business. Any side income qualifies. They don't count toward 5/24 AND have the best bonuses." });
+  if (!hasBiz) warns.push({ sev:'purple', icon:'💡', msg:"Chase Ink business cards do not require an incorporated business. Any side income qualifies. They do not count toward 5/24 AND have the best bonuses." });
   if (chaseStatus === 'sapphire' || chaseStatus === 'both') warns.push({ sev:'yellow', icon:'⏳', msg:'You received a Sapphire bonus within the last 48 months. You are ineligible for another Sapphire bonus until that window passes. Sapphire cards are removed from your roadmap — check back once 48 months have elapsed.' });
   if (chaseStatus === 'many') warns.push({ sev:'yellow', icon:'⚠️', msg:'You have 3+ Chase cards. Chase may scrutinize new applications more closely, especially for additional Ink cards. Space applications at least 6 months apart.' });
 
@@ -646,7 +646,7 @@ function runEngine() {
     + '<strong>Bonus timing:</strong> Wait for the bonus to post before applying for the next card.'
     + '</div></div></div>';
 
-  // HOW YOU'LL MAKE MONEY — use allRoadmap
+  // HOW YOU'LL MAKE MONEY
   var totalBonuses = top5.reduce(function(s,c) { return s + c.bonus; }, 0);
   var totalFees2 = top5.reduce(function(s,c) { return s + c.fee; }, 0);
   var totalCredits2 = top5.reduce(function(s,c) { return s + (c.credits || 0); }, 0);
@@ -661,27 +661,108 @@ function runEngine() {
   var annualEarn = Math.round(monthlySpend * 12 * (cats.length > 0 ? 2.5 : 1.5) * 0.01);
   var perCard = Math.round(totalNet / top5.length);
 
-  html += '<div class="sec-head" style="margin-top:28px">💰 How You\'ll Make Money</div>';
+  html += '<div class="sec-head" style="margin-top:28px">💰 Your Rewards Playbook</div>';
 
+  // ── SUMMARY BAR ──
   html += '<div class="money-box green">'
-    + '<div style="font-family:Syne,sans-serif;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;">Year 1 Breakdown — Your Specific Cards</div>'
+    + '<div style="font-family:Syne,sans-serif;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;">Total Estimated Value — ' + top5.length + ' Cards</div>'
     + '<div class="money-grid">'
-    + '<div class="money-stat"><div class="money-big">$' + totalBonuses.toLocaleString() + '</div><div class="money-lbl">Welcome Bonuses</div><div class="money-sub">' + top5.length + ' cards · ~' + monthsToComplete + ' months to earn</div></div>'
-    + '<div class="money-stat"><div class="money-big red">-$' + totalFees2.toLocaleString() + '</div><div class="money-lbl">Annual Fees</div><div class="money-sub">+$' + totalCredits2.toLocaleString() + ' credits offset this</div></div>'
-    + '<div class="money-stat highlight"><div class="money-big">$' + totalNet.toLocaleString() + '</div><div class="money-lbl">Net Profit Year 1</div><div class="money-sub green">cash equivalent</div></div>'
-    + '</div>';
+    + '<div class="money-stat"><div class="money-big">$' + totalBonuses.toLocaleString() + '</div><div class="money-lbl">Welcome Bonuses</div><div class="money-sub">~' + monthsToComplete + ' months to earn all</div></div>'
+    + '<div class="money-stat"><div class="money-big red">-$' + totalFees2.toLocaleString() + '</div><div class="money-lbl">Annual Fees</div><div class="money-sub">+$' + totalCredits2.toLocaleString() + ' in credits offset this</div></div>'
+    + '<div class="money-stat highlight"><div class="money-big">$' + totalNet.toLocaleString() + '</div><div class="money-lbl">Net Year 1</div><div class="money-sub green">cash equivalent</div></div>'
+    + '</div></div>';
 
-  top5.forEach(function(c) {
+  // ── PER CARD PLAYBOOK ──
+  html += '<div class="sec-head" style="margin-top:24px">Step-by-Step Per Card</div>';
+
+  top5.forEach(function(c, i) {
     var net = c.bonus - c.fee + (c.credits || 0);
-    var mo = c.minSpend === 0 ? '1 purchase' : '$' + c.minSpend.toLocaleString() + ' · ~' + Math.ceil(c.minSpend / monthlySpend) + 'mo';
-    html += '<div class="card-split">'
-      + '<div style="flex:1;font-size:.78rem">' + c.bank + ' ' + c.name + '</div>'
-      + '<div style="font-size:.72rem;color:var(--muted)">' + mo + '</div>'
-      + '<div style="font-size:.85rem;font-family:Syne,sans-serif;font-weight:700;color:' + (net > 0 ? 'var(--accent)' : 'var(--danger)') + ';min-width:80px;text-align:right">' + (net > 0 ? '+' : '') + '$' + net.toLocaleString() + '</div>'
-      + '</div>';
-  });
-  html += '</div>';
+    var moNeeded = c.minSpend === 0 ? 0 : Math.ceil(c.minSpend / monthlySpend);
+    var applyUrl = getApplyUrl(c);
 
+    // Build action steps for this card
+    var steps = [];
+
+    // Step 1: Apply
+    steps.push({
+      n: '1',
+      title: 'Apply' + (i === 0 ? ' now' : ' at month ' + (i * 3)),
+      body: 'Open the application and fill it out. Takes ~5 minutes. You will typically get an instant decision, or a pending review within 7–10 days.',
+      color: 'var(--accent)'
+    });
+
+    // Step 2: Set up autopay
+    steps.push({
+      n: '2',
+      title: 'Set up autopay immediately',
+      body: 'The moment the card arrives, set up autopay for the full statement balance. This is non-negotiable — one missed payment wipes out any benefit.',
+      color: 'var(--accent2)'
+    });
+
+    // Step 3: Hit the spend
+    if (c.minSpend === 0) {
+      steps.push({
+        n: '3',
+        title: 'Make one purchase',
+        body: 'This card only requires a single purchase to trigger the bonus. Buy anything — a coffee, a tank of gas. Bonus posts within 6–8 weeks.',
+        color: 'var(--accent)'
+      });
+    } else {
+      steps.push({
+        n: '3',
+        title: 'Hit $' + c.minSpend.toLocaleString() + ' in ' + c.days + ' days (~$' + Math.round(c.minSpend / (c.days / 30)).toLocaleString() + '/mo)',
+        body: 'Put your normal spending — groceries, gas, bills — on this card. ' + (moNeeded <= 1 ? 'At your spend level you will hit this in about a month.' : 'At your spend level this takes about ' + moNeeded + ' months. Do not manufacture spend — just redirect existing purchases.'),
+        color: 'var(--accent)'
+      });
+    }
+
+    // Step 4: Bonus posts
+    steps.push({
+      n: '4',
+      title: 'Bonus posts — collect $' + c.bonus.toLocaleString(),
+      body: (c.hasTransfers
+        ? 'Points land in your account within 6–8 weeks of hitting the minimum. ' + (isTravel ? 'Transfer to an airline or hotel partner for up to ' + travelMult + 'x value, or redeem as cash.' : 'Redeem as cash back or statement credit.')
+        : 'Cash or statement credit posts within 6–8 weeks of hitting the minimum spend.'),
+      color: 'var(--good)'
+    });
+
+    // Step 5: Fee decision (if has fee)
+    if (c.fee > 0) {
+      var effectiveFee = c.fee - (c.credits || 0);
+      steps.push({
+        n: '5',
+        title: 'Month 11 — decide before the $' + c.fee + ' annual fee hits',
+        body: effectiveFee <= 0
+          ? 'The $' + (c.credits || 0) + ' in annual credits more than cover the $' + c.fee + ' fee — this card pays for itself every year. Keep it.'
+          : 'Ask yourself: did I use $' + c.fee + ' worth of benefits? If yes, keep it. If no, call and downgrade to the no-fee version. Never cancel — that hurts your credit score.',
+        color: effectiveFee <= 0 ? 'var(--accent)' : 'var(--warn)'
+      });
+    }
+
+    html += '<div class="money-box" style="margin-bottom:14px;">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">'
+      + '<div>'
+      + '<div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Card ' + (i+1) + ' of ' + top5.length + '</div>'
+      + '<div style="font-family:Syne,sans-serif;font-weight:700;font-size:1rem;">' + c.bank + ' ' + c.name + '</div>'
+      + '<div style="font-size:.72rem;color:var(--muted);margin-top:3px">' + c.bonusPts + ' · ~$' + Math.max(0,net) + ' net · $' + c.fee + '/yr fee</div>'
+      + '</div>'
+      + (applyUrl ? '<a href="' + applyUrl + '" target="_blank" rel="noopener" style="flex-shrink:0;display:inline-flex;align-items:center;padding:8px 16px;background:var(--accent);color:#000;border-radius:6px;font-size:.72rem;font-weight:700;text-decoration:none;">Apply Now →</a>' : '')
+      + '</div>'
+      + '<div style="display:flex;flex-direction:column;gap:8px;">';
+
+    steps.forEach(function(s) {
+      html += '<div style="display:flex;gap:12px;align-items:flex-start;">'
+        + '<div style="width:22px;height:22px;border-radius:50%;background:' + s.color + ';color:#000;font-family:Syne,sans-serif;font-weight:800;font-size:.7rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px">' + s.n + '</div>'
+        + '<div style="flex:1;min-width:0;">'
+        + '<div style="font-size:.78rem;font-weight:600;color:var(--text);margin-bottom:2px">' + s.title + '</div>'
+        + '<div style="font-size:.72rem;color:var(--muted);line-height:1.65">' + s.body + '</div>'
+        + '</div></div>';
+    });
+
+    html += '</div></div>';
+  });
+
+  // ── TRAVEL VALUE (if applicable) ──
   if (isTravel && pointsCards2.length > 0) {
     html += '<div class="money-box">'
       + '<div style="font-family:Syne,sans-serif;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent2);margin-bottom:14px;">✈️ What Your Points Are Actually Worth</div>'
@@ -689,36 +770,20 @@ function runEngine() {
       + '<div class="travel-box"><div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;margin-bottom:6px">Cash Out</div><div style="font-family:Syne,sans-serif;font-size:1.4rem;font-weight:700;">$' + totalPointsBonuses.toLocaleString() + '</div><div style="font-size:.7rem;color:var(--muted);margin-top:3px">1 cent per point — minimum value</div></div>'
       + '<div class="travel-box purple"><div style="font-size:.62rem;color:var(--accent2);text-transform:uppercase;margin-bottom:6px">Travel Transfers</div><div style="font-family:Syne,sans-serif;font-size:1.4rem;font-weight:700;color:var(--accent2);">$' + pointsRealValue.toLocaleString() + '</div><div style="font-size:.7rem;color:var(--muted);margin-top:3px">~' + travelMult + 'cpp via airline/hotel transfers</div></div>'
       + '</div><div class="tip-box">';
-    if (goals.indexOf('biz') !== -1) html += '💺 <strong style="color:var(--text)">Business class:</strong> Transfer Chase/Amex to Air France, ANA, or United. Your bonuses can book $3,000–$5,000 business class seats.<br>';
-    if (goals.indexOf('flights') !== -1) html += '✈️ <strong style="color:var(--text)">Flights:</strong> Transfer to Southwest, United, or British Airways. 15,000–25,000 points = domestic flights worth $200–$400.<br>';
-    if (goals.indexOf('hotels') !== -1) html += '🏨 <strong style="color:var(--text)">Hotels:</strong> Chase points transfer to Hyatt 1:1 — best value anywhere. 25,000 points = $300–$600/night rooms.<br>';
+    if (goals.indexOf('biz') !== -1) html += '💺 <strong style="color:var(--text)">Business class:</strong> Transfer Chase/Amex to Air France, ANA, or United for $3k–$5k seats.<br>';
+    if (goals.indexOf('flights') !== -1) html += '✈️ <strong style="color:var(--text)">Flights:</strong> Transfer to Southwest, United, or British Airways. 15k–25k points = $200–$400 flights.<br>';
+    if (goals.indexOf('hotels') !== -1) html += '🏨 <strong style="color:var(--text)">Hotels:</strong> Chase points transfer to Hyatt 1:1. 25k points = $300–$600/night rooms.<br>';
     if (goals.indexOf('lounge') !== -1) html += '🛋️ <strong style="color:var(--text)">Lounges:</strong> Free access worth $30–$60/visit. 10 flights/year = $300–$600 saved automatically.';
     html += '</div></div>';
   }
 
+  // ── LONG GAME ──
   html += '<div class="money-box">'
-    + '<div style="font-family:Syne,sans-serif;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:14px;">📈 Ongoing Annual Value After Year 1</div>';
-  top5.forEach(function(c) {
-    var keeperVal = (c.credits || 0) - c.fee;
-    var matchedCats = (c.cats || []).filter(function(cc) { return cats.indexOf(cc) !== -1; });
-    html += '<div class="ongoing-row">'
-      + '<div style="font-weight:600;color:var(--text);margin-bottom:2px">' + c.bank + ' ' + c.name + '</div>'
-      + (matchedCats.length > 0 ? '<div style="color:var(--muted)">Earns bonus on: ' + matchedCats.join(', ') + '</div>' : '<div style="color:var(--muted)">Earns 1–2x on all purchases</div>')
-      + (keeperVal > 0 ? '<div style="color:var(--accent)">Credits exceed fee by $' + keeperVal + ' — free to keep every year</div>' : '')
-      + (c.fee > 0 && keeperVal <= 0 ? '<div style="color:var(--warn)">At 11 months: keep, downgrade, or cancel before $' + c.fee + ' hits again</div>' : '')
-      + (c.fee === 0 ? '<div style="color:var(--accent)">No annual fee — keep forever</div>' : '')
-      + '</div>';
-  });
-  html += '<div style="margin-top:14px;padding:12px;background:var(--surface);border-radius:8px;font-size:.75rem;color:var(--muted);">At $' + monthlySpend.toLocaleString() + '/mo spend, expect roughly <strong style="color:var(--accent)">$' + annualEarn.toLocaleString() + '/year</strong> in ongoing rewards from normal spending.</div></div>';
-
-  html += '<div class="money-box">'
-    + '<div style="font-family:Syne,sans-serif;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:14px;">🔄 The Long Game</div>'
-    + '<div class="cycle-step" style="border-left:3px solid var(--accent)"><strong style="color:var(--text)">Hit the bonus, bank the rewards.</strong> Spend exactly what you need for the minimum — the bonus is the money maker.</div>'
-    + '<div class="cycle-step" style="border-left:3px solid var(--accent2)"><strong style="color:var(--text)">Decide at 11 months.</strong> Do credits + rewards exceed the fee? Keep it. If not, downgrade to no-fee version. Never close cards.</div>'
-    + '<div class="cycle-step" style="border-left:3px solid var(--warn)"><strong style="color:var(--text)">Watch your 5/24 slots open up.</strong> Cards age off exactly 24 months after opening. As they drop off, repeat the highest-value cards.</div>'
-    + '<div class="cycle-step" style="border-left:3px solid var(--good)"><strong style="color:var(--text)">Steady state: 2–3 cards/year.</strong> At your spend level that\'s <strong style="color:var(--accent)">$' + (perCard * 2).toLocaleString() + '–$' + (perCard * 3).toLocaleString() + '/year</strong> in bonuses on autopilot.</div>'
+    + '<div style="font-family:Syne,sans-serif;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:14px;">🔄 After Year 1 — Keep the Machine Running</div>'
+    + '<div class="cycle-step" style="border-left:3px solid var(--accent)"><strong style="color:var(--text)">Ongoing spend rewards.</strong> At $' + monthlySpend.toLocaleString() + '/mo you will earn roughly <strong style="color:var(--accent)">$' + annualEarn.toLocaleString() + '/year</strong> just from normal spending on keeper cards.</div>'
+    + '<div class="cycle-step" style="border-left:3px solid var(--accent2)"><strong style="color:var(--text)">Slots reopen.</strong> Cards age off the 5/24 clock exactly 24 months after opening. As they drop off, you can cycle through high-value cards again.</div>'
+    + '<div class="cycle-step" style="border-left:3px solid var(--good)"><strong style="color:var(--text)">Steady state.</strong> 2–3 new cards per year at your spend level = roughly <strong style="color:var(--accent)">$' + (perCard * 2).toLocaleString() + '–$' + (perCard * 3).toLocaleString() + '/year</strong> in bonuses on autopilot.</div>'
     + '</div>';
-
   showResult(html);
 }
 
@@ -792,13 +857,13 @@ var BANK_RULES = [
     { name:'5/24 Rule', sev:'red', desc:'If you have opened 5+ personal credit cards (any bank) in the last 24 months, Chase auto-denies you. ALWAYS hit Chase first before other banks.' },
     { name:'Sapphire 48-Month Rule', sev:'red', desc:'You can only earn the Sapphire Preferred OR Sapphire Reserve bonus once every 48 months.' },
     { name:'2/30 Rule', sev:'yellow', desc:'Chase rarely approves more than 2 cards in 30 days. Safest: 1 personal + 1 business per 30 days.' },
-    { name:'Business Cards Skip 5/24', sev:'green', desc:"Ink cards don't add to your 5/24 count. But you still need to BE under 5/24 to be approved." },
+    { name:'Business Cards Skip 5/24', sev:'green', desc:"Ink cards do not add to your 5/24 count. But you still need to BE under 5/24 to be approved." },
   ]},
   { bank:'American Express', rules:[
     { name:'Once Per Lifetime Bonus', sev:'red', desc:"Amex awards each card's welcome bonus only once per lifetime. Check eligibility before applying." },
-    { name:'Popup Jail', sev:'red', desc:"If Amex determines you've recently held the card, a popup may say you're not eligible for the welcome offer. Don't accept the card without the bonus." },
+    { name:'Popup Jail', sev:'red', desc:"If Amex determines you've recently held the card, a popup may say you're not eligible for the welcome offer. Do not accept the card without the bonus." },
     { name:'2/90 Application Rule', sev:'yellow', desc:'Amex limits approvals to ~2 cards per 90 days.' },
-    { name:'No 5/24 Equivalent', sev:'green', desc:"Amex doesn't track other banks' cards. Apply regardless of your 5/24 status." },
+    { name:'No 5/24 Equivalent', sev:'green', desc:"Amex does not track other banks' cards. Apply regardless of your 5/24 status." },
   ]},
   { bank:'Capital One', rules:[
     { name:'Triple Bureau Pull', sev:'red', desc:'Capital One pulls ALL THREE credit bureaus on every application — 3 hard inquiries at once.' },
