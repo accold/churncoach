@@ -179,11 +179,18 @@ async function scrapeDoctorofCredit() {
     const bank = detectBank(heading);
     if (!bank) return;
 
-    // Gather context: heading + next 3 siblings
+    // Gather context: heading + next 4 siblings; also extract why text
     let context = heading;
+    let whyText = '';
     let sib = $(el).next();
-    for (let i = 0; i < 3; i++) {
-      context += ' ' + sib.text();
+    for (let i = 0; i < 4; i++) {
+      const sibText = sib.text().trim();
+      context += ' ' + sibText;
+      // First paragraph that isn't just bonus/spend details becomes the why
+      if (!whyText && sibText.length > 40 && !parseBonus(sibText) && !/^\$[\d,]/.test(sibText)) {
+        whyText = sibText.replace(/\s+/g, ' ').trim();
+        if (whyText.length > 220) whyText = whyText.substring(0, 217) + '...';
+      }
       sib = sib.next();
       if (!sib.length) break;
     }
@@ -224,6 +231,7 @@ async function scrapeDoctorofCredit() {
       rule524: bank === 'Chase' && !isBiz,
       hasTransfers: ['Chase', 'Amex', 'Capital One', 'Citi', 'Bilt'].includes(bank),
       applyUrl: getApplyUrl(name, bank),
+      why: whyText || null,
       dataSource: 'doctorofcredit',
       scrapedAt: new Date().toISOString(),
     });
