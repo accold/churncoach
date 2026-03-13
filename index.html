@@ -214,6 +214,15 @@ select option{background:var(--surface2);}
         <option value="0">0</option><option value="1">1</option><option value="2">2+ (at their limit)</option>
       </select>
     </div>
+    <div class="fg"><label>Chase Cards You Currently Have</label>
+      <select id="s_chase">
+        <option value="none">None / opened 48+ months ago</option>
+        <option value="ink">1+ Ink business cards (any age)</option>
+        <option value="sapphire">Sapphire bonus in last 48 months</option>
+        <option value="both">Sapphire bonus in last 48 months + Ink cards</option>
+        <option value="many">3+ Chase cards total</option>
+      </select>
+    </div>
     <div class="fg"><label>Pay Balance in Full Monthly?</label>
       <select id="s_payoff">
         <option value="yes">Yes — always</option>
@@ -397,6 +406,7 @@ function runEngine() {
   var cap1Count = parseInt(document.getElementById('s_cap1').value) || 0;
   var payoff = document.getElementById('s_payoff').value;
   var hasBiz = document.getElementById('s_hasbiz').value === 'yes';
+  var chaseStatus = document.getElementById('s_chase').value;
   var goals = getChipVals('s_goals');
   var cats = getChipVals('s_cats');
   var avoid = getChipVals('s_avoid');
@@ -421,7 +431,20 @@ function runEngine() {
     if (c.isBiz && !hasBiz) eligible = false;
     if (avoid.indexOf(c.bank) !== -1) eligible = false;
     if (c.bank === 'Capital One' && cap1Count >= 2) eligible = false;
-    if (c.bank === 'Amex' && amexCount >= 3) { eligible = false; } // popup jail = not worth it
+    if (c.bank === 'Amex' && amexCount >= 3) { eligible = false; }
+    // Sapphire 48-month rule: block if they already have a Sapphire
+    var isSapphire = c.id === 'csp' || c.id === 'csr';
+    var hasSapphire = chaseStatus === 'sapphire' || chaseStatus === 'both';
+    if (isSapphire && hasSapphire) { eligible = false; }
+    // Can't hold both Sapphire Preferred and Reserve at same time
+    if (c.id === 'csr' && chaseStatus === 'sapphire') eligible = false;
+    if (c.id === 'csp' && chaseStatus === 'sapphire') eligible = false;
+    // Too many Chase cards = velocity risk on more Ink
+    var hasInk = chaseStatus === 'ink' || chaseStatus === 'both' || chaseStatus === 'many';
+    if (c.isBiz && c.bank === 'Chase' && chaseStatus === 'many') {
+      flags.push({ t:'warn', m:'⚠️ Chase may slow-roll approval with 3+ cards already' });
+      score -= 15;
+    }
 
     // ── GOALS (primary driver — high weight) ──
     var goalHits = 0;
@@ -524,6 +547,8 @@ function runEngine() {
   if (cards524 === 4) warns.push({ sev:'red', icon:'🔥', msg:'ONE Chase slot left. Use it on the highest-value Chase card, then shift to non-5/24 cards.' });
   if (cards524 <= 2) warns.push({ sev:'green', icon:'✅', msg:'You have ' + slotsLeft + ' Chase slots. Hit all Chase cards first — they have the best transfer partners.' });
   if (!hasBiz) warns.push({ sev:'purple', icon:'💡', msg:"Chase Ink business cards don't require an incorporated business. Any side income qualifies. They don't count toward 5/24 AND have the best bonuses." });
+  if (chaseStatus === 'sapphire' || chaseStatus === 'both') warns.push({ sev:'yellow', icon:'⏳', msg:'You received a Sapphire bonus within the last 48 months. You are ineligible for another Sapphire bonus until that window passes. Sapphire cards are removed from your roadmap — check back once 48 months have elapsed.' });
+  if (chaseStatus === 'many') warns.push({ sev:'yellow', icon:'⚠️', msg:'You have 3+ Chase cards. Chase may scrutinize new applications more closely, especially for additional Ink cards. Space applications at least 6 months apart.' });
 
   if (warns.length) {
     html += '<div class="sec-head">Key Alerts</div><div class="warn-list">';
