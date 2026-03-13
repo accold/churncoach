@@ -127,15 +127,29 @@ select option{background:var(--surface2);}
 .filter-bar{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap;}
 .add-form{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px;margin-bottom:22px;display:none;}
 .add-form.on{display:block;animation:up .3s;}
-.skeleton{background:linear-gradient(90deg,var(--surface) 25%,var(--surface2) 50%,var(--surface) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:8px;}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .live-banner{display:flex;align-items:center;justify-content:space-between;background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.15);border-radius:8px;padding:10px 14px;margin-bottom:24px;font-size:.72rem;}
 .live-banner.warn{background:rgba(255,184,0,.06);border-color:rgba(255,184,0,.2);}
-.live-banner.error{background:rgba(255,68,85,.06);border-color:rgba(255,68,85,.2);}
+.money-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:16px;}
+.money-box.green{border-color:rgba(0,255,136,.2);}
+.money-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px;}
+.money-stat{background:var(--surface);border-radius:10px;padding:16px;text-align:center;}
+.money-stat.highlight{border:1px solid rgba(0,255,136,.15);}
+.money-big{font-family:'Syne',sans-serif;font-size:1.9rem;font-weight:800;color:var(--accent);}
+.money-big.red{color:var(--danger);}
+.money-lbl{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:4px;}
+.money-sub{font-size:.68rem;color:var(--muted);margin-top:3px;}
+.money-sub.green{color:var(--accent);}
+.card-split{display:flex;align-items:center;gap:14px;padding:10px 0;border-top:1px solid var(--border);}
+.travel-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.travel-box{background:var(--surface);border-radius:9px;padding:14px;}
+.travel-box.purple{border:1px solid rgba(162,89,255,.2);}
+.tip-box{font-size:.75rem;color:var(--muted);line-height:1.8;padding:12px;background:var(--surface);border-radius:8px;}
+.ongoing-row{padding:10px 0;border-top:1px solid var(--border);font-size:.75rem;line-height:1.7;}
+.cycle-step{padding:12px;background:var(--surface);border-radius:8px;font-size:.78rem;line-height:1.75;color:var(--muted);margin-bottom:8px;}
 @media(max-width:768px){
   nav{padding:14px 18px;flex-wrap:wrap;gap:10px;}
   .page{padding:20px 16px;}
-  .grid2,.rec-grid,.stat-grid,.score-row{grid-template-columns:1fr;}
+  .grid2,.rec-grid,.stat-grid,.score-row,.money-grid,.travel-grid{grid-template-columns:1fr;}
   .card-row{grid-template-columns:1fr;gap:10px;}
   h1{font-size:1.9rem;}
 }
@@ -156,7 +170,6 @@ select option{background:var(--surface2);}
   </div>
 </nav>
 
-<!-- STRATEGY -->
 <div class="page on" id="strategy">
   <div id="liveBanner"></div>
   <div class="eyebrow">// algorithm engine</div>
@@ -214,7 +227,7 @@ select option{background:var(--surface2);}
         <option value="no">No — personal cards only</option>
       </select>
     </div>
-    <div class="fg full"><label>Primary Goals (pick all)</label>
+    <div class="fg full"><label>Primary Goals (pick all that apply)</label>
       <div class="chips" id="s_goals">
         <div class="chip" data-val="flights" onclick="toggleChip(this)">✈️ Free Flights</div>
         <div class="chip" data-val="hotels" onclick="toggleChip(this)">🏨 Hotel Stays</div>
@@ -258,7 +271,6 @@ select option{background:var(--surface2);}
   </div>
 </div>
 
-<!-- DASHBOARD -->
 <div class="page" id="dashboard">
   <div class="eyebrow">// tracker</div>
   <h1>Card <span class="hi">Dashboard</span></h1>
@@ -283,7 +295,6 @@ select option{background:var(--surface2);}
   <div class="card-list" id="cardList"></div>
 </div>
 
-<!-- CARD DB -->
 <div class="page" id="cards">
   <div class="eyebrow">// live card database</div>
   <h1>All Cards <span class="hi">Ranked</span></h1>
@@ -299,7 +310,6 @@ select option{background:var(--surface2);}
   <div class="rec-grid" id="recGrid"></div>
 </div>
 
-<!-- BANK RULES -->
 <div class="page" id="rules">
   <div class="eyebrow">// know the rules</div>
   <h1>Bank <span class="hi">Restrictions</span></h1>
@@ -308,333 +318,262 @@ select option{background:var(--surface2);}
 </div>
 
 <script>
-// ═══════════════════════════════════════════
-// CONFIG — update YOUR_GITHUB_USERNAME and YOUR_REPO_NAME
-// ═══════════════════════════════════════════
-const DATA_URL = 'https://accold.github.io/churncoach/cards.json';
-
-// ═══════════════════════════════════════════
-// DATA STATE
-// ═══════════════════════════════════════════
-let CARDS = [];
-let dataInfo = { updatedAt: null, liveCount: 0, cardCount: 0, status: 'loading' };
+var DATA_URL = 'https://accold.github.io/churncoach/cards.json';
+var CARDS = [];
+var dataInfo = { updatedAt: null, liveCount: 0, cardCount: 0, status: 'loading' };
 
 async function loadData() {
   setStatus('loading', 'Loading live data...');
   try {
-    const res = await fetch(DATA_URL + '?t=' + Date.now());
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
-
+    var res = await fetch(DATA_URL + '?t=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var json = await res.json();
     CARDS = json.cards;
-    dataInfo = {
-      updatedAt: new Date(json.updatedAt),
-      liveCount: json.liveCount,
-      cardCount: json.cardCount,
-      status: 'live'
-    };
-
-    const age = (Date.now() - dataInfo.updatedAt) / 3600000;
+    dataInfo = { updatedAt: new Date(json.updatedAt), liveCount: json.liveCount, cardCount: json.cardCount, status: 'live' };
+    var age = (Date.now() - dataInfo.updatedAt) / 3600000;
     if (age > 30) {
-      setStatus('stale', `Data ${Math.round(age)}h old — refresh pending`);
+      setStatus('stale', 'Data ' + Math.round(age) + 'h old');
     } else {
-      const timeAgo = age < 1 ? 'just now' : `${Math.round(age)}h ago`;
-      setStatus('live', `Live · ${json.liveCount}/${json.cardCount} cards · updated ${timeAgo}`);
+      setStatus('live', 'Live · ' + json.liveCount + '/' + json.cardCount + ' cards · updated ' + (age < 1 ? 'just now' : Math.round(age) + 'h ago'));
     }
-
     updateBanner('live', json.liveCount, json.cardCount, dataInfo.updatedAt);
   } catch (err) {
-    console.warn('Could not load live data, using fallback:', err.message);
     CARDS = FALLBACK_CARDS;
     dataInfo.status = 'offline';
     setStatus('offline', 'Using cached data — click to retry');
     updateBanner('error', 0, FALLBACK_CARDS.length, null);
   }
-
-  // Re-render active page
-  const activePage = document.querySelector('.page.on')?.id;
-  if (activePage === 'cards') filterCards(document.querySelector('.filter-bar .btn.on'), 'all');
 }
 
 function setStatus(type, text) {
-  const dot = document.getElementById('statusDot');
-  const label = document.getElementById('statusText');
-  dot.className = 'status-dot ' + type;
-  label.textContent = text;
+  document.getElementById('statusDot').className = 'status-dot ' + type;
+  document.getElementById('statusText').textContent = text;
 }
 
 function updateBanner(type, live, total, updatedAt) {
-  const banner = document.getElementById('liveBanner');
+  var banner = document.getElementById('liveBanner');
   if (type === 'live') {
-    const dateStr = updatedAt ? updatedAt.toLocaleDateString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
-    banner.innerHTML = `
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:6px;height:6px;border-radius:50%;background:var(--accent)"></div>
-        <span style="color:var(--accent)">Live data</span>
-        <span style="color:var(--muted)">${live}/${total} cards with fresh offers · ${dateStr}</span>
-      </div>
-      <span style="color:var(--muted);font-size:.62rem">Updates nightly via GitHub Actions</span>`;
+    var dateStr = updatedAt ? updatedAt.toLocaleDateString('en-US', { month:'short', day:'numeric' }) : '';
+    banner.innerHTML = '<div style="display:flex;align-items:center;gap:8px"><div style="width:6px;height:6px;border-radius:50%;background:var(--accent)"></div><span style="color:var(--accent)">Live data</span><span style="color:var(--muted)">' + live + '/' + total + ' cards · ' + dateStr + '</span></div><span style="color:var(--muted);font-size:.62rem">Updates nightly via GitHub Actions</span>';
     banner.className = 'live-banner';
-  } else if (type === 'error') {
-    banner.innerHTML = `
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:6px;height:6px;border-radius:50%;background:var(--warn)"></div>
-        <span style="color:var(--warn)">Using cached data</span>
-        <span style="color:var(--muted)">Could not reach live source — offers may be outdated</span>
-      </div>
-      <a href="https://www.doctorofcredit.com/best-current-credit-card-sign-bonuses/" target="_blank" style="color:var(--accent);font-size:.62rem">Check Doctor of Credit →</a>`;
+  } else {
+    banner.innerHTML = '<div style="display:flex;align-items:center;gap:8px"><div style="width:6px;height:6px;border-radius:50%;background:var(--warn)"></div><span style="color:var(--warn)">Using cached data</span></div><a href="https://www.doctorofcredit.com/best-current-credit-card-sign-bonuses/" target="_blank" style="color:var(--accent);font-size:.62rem">Check Doctor of Credit →</a>';
     banner.className = 'live-banner warn';
   }
 }
 
 async function refreshData() {
   await loadData();
-  const activePage = document.querySelector('.page.on')?.id;
-  if (activePage === 'cards') filterCards(document.querySelector('.filter-bar .btn.on') || document.querySelector('.filter-bar .btn'), 'all');
+  var activePage = document.querySelector('.page.on');
+  if (activePage && activePage.id === 'cards') filterCards(document.querySelector('.filter-bar .btn.on'), 'all');
 }
 
-// ═══════════════════════════════════════════
-// FALLBACK CARDS (used if GitHub fetch fails)
-// ═══════════════════════════════════════════
-const FALLBACK_CARDS = [
+var FALLBACK_CARDS = [
   { id:'csp', bank:'Chase', name:'Sapphire Preferred', type:'travel', bonus:750, bonusPts:'75,000 pts', minSpend:5000, days:90, fee:95, credits:50, cats:['travel','dining'], hasTransfers:true, rule524:true, minScore:700, roi:7.4, isBiz:false, easyMin:false, netVal:705, dataSource:'fallback', why:'Best starter travel card. $50 hotel credit offsets fee. Points transfer to 14 airlines/hotels.' },
   { id:'csr', bank:'Chase', name:'Sapphire Reserve', type:'travel', bonus:750, bonusPts:'60,000 pts', minSpend:4000, days:90, fee:550, credits:300, cats:['travel','dining'], hasTransfers:true, rule524:true, minScore:720, roi:6.8, isBiz:false, easyMin:false, netVal:500, dataSource:'fallback', why:'$300 travel credit makes effective fee $250. Priority Pass lounge access.' },
-  { id:'ibp', bank:'Chase', name:'Ink Business Preferred', type:'business', bonus:1000, bonusPts:'100,000 pts', minSpend:8000, days:90, fee:95, credits:0, cats:['travel','online','office'], hasTransfers:true, rule524:false, minScore:700, roi:10.1, isBiz:true, easyMin:false, netVal:905, dataSource:'fallback', why:"DOES NOT count toward 5/24. Best bonus-to-fee ratio available." },
+  { id:'ibp', bank:'Chase', name:'Ink Business Preferred', type:'business', bonus:1000, bonusPts:'100,000 pts', minSpend:8000, days:90, fee:95, credits:0, cats:['travel','online','office'], hasTransfers:true, rule524:false, minScore:700, roi:10.1, isBiz:true, easyMin:false, netVal:905, dataSource:'fallback', why:'DOES NOT count toward 5/24. Best bonus-to-fee ratio available.' },
   { id:'ibu', bank:'Chase', name:'Ink Business Unlimited', type:'business', bonus:750, bonusPts:'$750 cash', minSpend:6000, days:90, fee:0, credits:0, cats:['online','office'], hasTransfers:false, rule524:false, minScore:680, roi:9.2, isBiz:true, easyMin:false, netVal:750, dataSource:'fallback', why:'No fee. Does NOT count toward 5/24.' },
   { id:'ff', bank:'Chase', name:'Freedom Flex', type:'cashback', bonus:200, bonusPts:'$200 cash', minSpend:500, days:90, fee:0, credits:0, cats:['grocery','dining','online'], hasTransfers:false, rule524:true, minScore:670, roi:8.5, isBiz:false, easyMin:true, netVal:200, dataSource:'fallback', why:'Only $500 minimum — easiest bonus to hit.' },
   { id:'amexplat', bank:'Amex', name:'Platinum Card', type:'travel', bonus:1500, bonusPts:'150,000 pts', minSpend:8000, days:180, fee:695, credits:600, cats:['travel'], hasTransfers:true, rule524:false, minScore:720, roi:8.6, isBiz:false, easyMin:false, netVal:1405, dataSource:'fallback', why:'Highest absolute welcome offer. Centurion Lounge access.' },
   { id:'amexgold', bank:'Amex', name:'Gold Card', type:'travel', bonus:600, bonusPts:'60,000 pts', minSpend:6000, days:180, fee:250, credits:240, cats:['dining','grocery'], hasTransfers:true, rule524:false, minScore:700, roi:7.2, isBiz:false, easyMin:false, netVal:590, dataSource:'fallback', why:'4x on dining and US groceries. $120 dining credit.' },
   { id:'venturex', bank:'Capital One', name:'Venture X', type:'travel', bonus:750, bonusPts:'75,000 miles', minSpend:4000, days:90, fee:395, credits:300, cats:['travel'], hasTransfers:true, rule524:false, minScore:720, roi:8.1, isBiz:false, easyMin:false, netVal:655, dataSource:'fallback', why:'$300 travel credit + anniversary miles effectively eliminate the fee.' },
-  { id:'strata', bank:'Citi', name:'Strata Premier', type:'travel', bonus:600, bonusPts:'75,000 pts', minSpend:4000, days:90, fee:95, credits:100, cats:['travel','dining','grocery','gas'], hasTransfers:true, rule524:false, minScore:700, roi:7.9, isBiz:false, easyMin:false, netVal:605, dataSource:'fallback', why:"Citi 48-month rule. Turkish Airlines transfer sweet spot." },
-  { id:'doubecash', bank:'Citi', name:'Double Cash', type:'cashback', bonus:200, bonusPts:'$200 cash', minSpend:1500, days:90, fee:0, credits:0, cats:['everything'], hasTransfers:false, rule524:false, minScore:670, roi:7.2, isBiz:false, easyMin:true, netVal:200, dataSource:'fallback', why:'2% on everything, no fee. Product-change to Strata Premier later.' },
+  { id:'strata', bank:'Citi', name:'Strata Premier', type:'travel', bonus:600, bonusPts:'75,000 pts', minSpend:4000, days:90, fee:95, credits:100, cats:['travel','dining','grocery','gas'], hasTransfers:true, rule524:false, minScore:700, roi:7.9, isBiz:false, easyMin:false, netVal:605, dataSource:'fallback', why:'Citi 48-month rule. Turkish Airlines transfer sweet spot.' },
+  { id:'doubecash', bank:'Citi', name:'Double Cash', type:'cashback', bonus:200, bonusPts:'$200 cash', minSpend:1500, days:90, fee:0, credits:0, cats:['everything'], hasTransfers:false, rule524:false, minScore:670, roi:7.2, isBiz:false, easyMin:true, netVal:200, dataSource:'fallback', why:'2% on everything, no fee.' },
   { id:'wfaj', bank:'Wells Fargo', name:'Autograph Journey', type:'travel', bonus:400, bonusPts:'60,000 pts', minSpend:4000, days:90, fee:95, credits:50, cats:['hotels','dining','travel'], hasTransfers:true, rule524:false, minScore:690, roi:6.5, isBiz:false, easyMin:false, netVal:355, dataSource:'fallback', why:'Wells Fargo has NO velocity rules. Most forgiving major bank.' },
   { id:'barcavoy', bank:'Barclays', name:'AAdvantage Aviator Red', type:'travel', bonus:600, bonusPts:'60,000 miles', minSpend:0, days:90, fee:99, credits:0, cats:['travel'], hasTransfers:false, rule524:false, minScore:680, roi:7.8, isBiz:false, easyMin:true, netVal:501, dataSource:'fallback', why:'Bonus after first purchase only — no min spend.' },
 ];
 
-// ═══════════════════════════════════════════
-// ALGORITHM ENGINE
-// ═══════════════════════════════════════════
 function getChipVals(id) {
-  return [...document.querySelectorAll(`#${id} .chip.on`)].map(c => c.dataset.val);
+  return Array.from(document.querySelectorAll('#' + id + ' .chip.on')).map(function(c) { return c.dataset.val; });
 }
 
-function runEngine() {
-  const creditScore = parseInt(document.getElementById('s_score').value) || 0;
-  const monthlySpend = parseInt(document.getElementById('s_spend').value) || 0;
-  const cards524 = parseInt(document.getElementById('s_524').value) || 0;
-  const amexCount = parseInt(document.getElementById('s_amex').value) || 0;
-  const cap1Count = parseInt(document.getElementById('s_cap1').value) || 0;
-  const payoff = document.getElementById('s_payoff').value;
-  const hasBiz = document.getElementById('s_hasbiz').value === 'yes';
-  const goals = getChipVals('s_goals');
-  const cats = getChipVals('s_cats');
-  const avoid = getChipVals('s_avoid');
+function toggleChip(el) { el.classList.toggle('on'); }
 
-  if (!creditScore || !monthlySpend) {
-    alert('Please select your credit score and monthly spend.');
-    return;
-  }
+function runEngine() {
+  var creditScore = parseInt(document.getElementById('s_score').value) || 0;
+  var monthlySpend = parseInt(document.getElementById('s_spend').value) || 0;
+  var cards524 = parseInt(document.getElementById('s_524').value) || 0;
+  var amexCount = parseInt(document.getElementById('s_amex').value) || 0;
+  var cap1Count = parseInt(document.getElementById('s_cap1').value) || 0;
+  var payoff = document.getElementById('s_payoff').value;
+  var hasBiz = document.getElementById('s_hasbiz').value === 'yes';
+  var goals = getChipVals('s_goals');
+  var cats = getChipVals('s_cats');
+  var avoid = getChipVals('s_avoid');
+
+  if (!creditScore || !monthlySpend) { alert('Please select your credit score and monthly spend.'); return; }
 
   if (payoff === 'no') {
-    showResult(`<div class="warn-list"><div class="wi red"><div class="wi-icon">🚨</div><div>
-      <strong>Stop — Do Not Churn if You Carry a Balance</strong><br>
-      <span style="font-size:.75rem;color:var(--muted);line-height:1.7">
-        Credit card APRs run 24–29%. A $600 bonus is wiped out in 2 months of carrying a $2,500 balance at 27% APR.
-        Pay all balances first, then come back.
-      </span></div></div></div>`);
+    showResult('<div class="warn-list"><div class="wi red"><div class="wi-icon">🚨</div><div><strong>Stop — Do Not Churn if You Carry a Balance</strong><br><span style="font-size:.75rem;color:var(--muted)">Credit card APRs run 24–29%. A $600 bonus is wiped out in 2 months of carrying a $2,500 balance. Pay all balances first.</span></div></div></div>');
     return;
   }
 
-  const cards = CARDS.length > 0 ? CARDS : FALLBACK_CARDS;
+  var cards = CARDS.length > 0 ? CARDS : FALLBACK_CARDS;
 
-  const scored = cards.map(c => {
-    let score = 0;
-    let eligible = true;
-    const flags = [];
-
+  var scored = cards.map(function(c) {
+    var score = 0;
+    var eligible = true;
+    var flags = [];
     if (creditScore < c.minScore) eligible = false;
     if (c.rule524 && cards524 >= 5) eligible = false;
     if (c.isBiz && !hasBiz) eligible = false;
-    if (avoid.includes(c.bank)) eligible = false;
+    if (avoid.indexOf(c.bank) !== -1) eligible = false;
     if (c.bank === 'Capital One' && cap1Count >= 2) eligible = false;
-
     score += c.roi * 5;
-
-    const monthlyNeeded = c.minSpend / (c.days / 30);
-    const spendRatio = c.minSpend === 0 ? 0 : monthlyNeeded / monthlySpend;
-    if (spendRatio > 1.4) { score -= 25; flags.push({ t:'warn', m:`⚠️ Spend req may be tight ($${Math.round(monthlyNeeded)}/mo needed)` }); }
+    var monthlyNeeded = c.minSpend / (c.days / 30);
+    var spendRatio = c.minSpend === 0 ? 0 : monthlyNeeded / monthlySpend;
+    if (spendRatio > 1.4) { score -= 25; flags.push({ t:'warn', m:'⚠️ Spend req may be tight ($' + Math.round(monthlyNeeded) + '/mo needed)' }); }
     else if (spendRatio < 0.6 || c.minSpend === 0) { score += 10; flags.push({ t:'good', m:'✅ Min spend easily achievable' }); }
-
     if (c.rule524) {
-      const slotsLeft = 5 - cards524;
-      if (slotsLeft >= 3) { score += 15; flags.push({ t:'good', m:`✅ You have ${slotsLeft} Chase slots remaining` }); }
-      if (slotsLeft === 2) { score += 20; }
+      var slotsLeft = 5 - cards524;
+      if (slotsLeft >= 3) { score += 15; flags.push({ t:'good', m:'✅ You have ' + slotsLeft + ' Chase slots remaining' }); }
+      if (slotsLeft === 2) score += 20;
       if (slotsLeft === 1) { score += 35; flags.push({ t:'warn', m:'🚨 FINAL Chase slot — use wisely' }); }
     }
     if (!c.rule524 && cards524 >= 5) { score += 20; flags.push({ t:'good', m:'✅ Not blocked by 5/24' }); }
-
     if (c.bank === 'Amex' && amexCount >= 3) { score -= 18; flags.push({ t:'warn', m:'⚠️ High Amex count — popup jail risk' }); }
     if (c.bank === 'Capital One') { score -= 5; flags.push({ t:'warn', m:'⚠️ Cap1 pulls all 3 bureaus' }); }
-
-    if (goals.includes('flights') && c.hasTransfers) score += 12;
-    if (goals.includes('cash') && c.type === 'cashback') score += 15;
-    if (goals.includes('lounge') && ['csr','amexplat','venturex'].includes(c.id)) { score += 14; flags.push({ t:'good', m:'✅ Includes lounge access' }); }
-    if (goals.includes('hotels') && ['csr','venturex','amexplat'].includes(c.id)) score += 10;
-    if (goals.includes('biz') && c.hasTransfers) score += 8;
-    if (goals.includes('intl') && c.hasTransfers) score += 8;
-
-    const catHits = (c.cats || []).filter(cc => cats.includes(cc)).length;
+    if (goals.indexOf('flights') !== -1 && c.hasTransfers) score += 12;
+    if (goals.indexOf('cash') !== -1 && c.type === 'cashback') score += 15;
+    if (goals.indexOf('lounge') !== -1 && ['csr','amexplat','venturex'].indexOf(c.id) !== -1) { score += 14; flags.push({ t:'good', m:'✅ Includes lounge access' }); }
+    if (goals.indexOf('hotels') !== -1 && ['csr','venturex','amexplat'].indexOf(c.id) !== -1) score += 10;
+    if (goals.indexOf('biz') !== -1 && c.hasTransfers) score += 8;
+    if (goals.indexOf('intl') !== -1 && c.hasTransfers) score += 8;
+    var catHits = (c.cats || []).filter(function(cc) { return cats.indexOf(cc) !== -1; }).length;
     score += catHits * 9;
-    if (catHits > 0) flags.push({ t:'good', m:`✅ Earns bonus on ${catHits} of your top categories` });
-
+    if (catHits > 0) flags.push({ t:'good', m:'✅ Earns bonus on ' + catHits + ' of your top categories' });
     if (c.fee === 0) score += 6;
     if (c.minSpend === 0) { score += 10; flags.push({ t:'good', m:'✅ No minimum spend — just make one purchase' }); }
-
-    const netVal = c.bonus - c.fee + (c.credits || 0);
-    return { ...c, score: Math.max(0, Math.round(score)), eligible, flags, netVal };
+    var netVal = c.bonus - c.fee + (c.credits || 0);
+    return Object.assign({}, c, { score: Math.max(0, Math.round(score)), eligible: eligible, flags: flags, netVal: netVal });
   });
 
-  const eligible = scored.filter(c => c.eligible).sort((a,b) => b.score - a.score);
+  var eligible = scored.filter(function(c) { return c.eligible; }).sort(function(a,b) { return b.score - a.score; });
   if (!eligible.length) {
     showResult('<div class="wi yellow"><div class="wi-icon">⚠️</div><div>No eligible cards with current settings. Try removing banks from the avoid list.</div></div>');
     return;
   }
 
-  const top5 = eligible.slice(0, 5);
-  const totalPotential = top5.reduce((s,c) => s + Math.max(0, c.netVal), 0);
-  const slotsLeft = Math.max(0, 5 - cards524);
-  const dataNote = dataInfo.status === 'live'
-    ? `Using live offer data · updated ${dataInfo.updatedAt?.toLocaleDateString()}`
-    : 'Using cached fallback data — verify offers before applying';
+  var top5 = eligible.slice(0, 5);
+  var totalPotential = top5.reduce(function(s,c) { return s + Math.max(0, c.netVal); }, 0);
+  var slotsLeft = Math.max(0, 5 - cards524);
+  document.getElementById('reportSub').textContent = dataInfo.status === 'live' ? 'Using live offer data · updated ' + (dataInfo.updatedAt ? dataInfo.updatedAt.toLocaleDateString() : '') : 'Using cached fallback data — verify offers before applying';
 
-  document.getElementById('reportSub').textContent = dataNote;
+  var html = '<div class="score-row">'
+    + '<div class="score-box"><div class="score-num">' + slotsLeft + '</div><div class="score-lbl">Chase Slots Left</div></div>'
+    + '<div class="score-box"><div class="score-num" style="color:' + (eligible.length > 8 ? 'var(--accent)' : 'var(--warn)') + '">' + eligible.length + '</div><div class="score-lbl">Eligible Cards</div></div>'
+    + '<div class="score-box"><div class="score-num">$' + totalPotential.toLocaleString() + '</div><div class="score-lbl">Top 5 Net Value</div></div>'
+    + '<div class="score-box"><div class="score-num" style="color:var(--accent)">LOW</div><div class="score-lbl">Risk Level</div></div>'
+    + '</div>';
 
-  let html = `<div class="score-row">
-    <div class="score-box"><div class="score-num">${slotsLeft}</div><div class="score-lbl">Chase Slots Left</div></div>
-    <div class="score-box"><div class="score-num" style="color:${eligible.length>8?'var(--accent)':'var(--warn)'}">${eligible.length}</div><div class="score-lbl">Eligible Cards</div></div>
-    <div class="score-box"><div class="score-num">$${totalPotential.toLocaleString()}</div><div class="score-lbl">Top 5 Net Value</div></div>
-    <div class="score-box"><div class="score-num" style="color:var(--accent)">LOW</div><div class="score-lbl">Risk Level</div></div>
-  </div>`;
-
-  const warns = [];
+  var warns = [];
   if (cards524 >= 5) warns.push({ sev:'red', icon:'🚨', msg:'You are over Chase 5/24. Skip ALL Chase personal cards until applications age out.' });
   if (cards524 === 4) warns.push({ sev:'red', icon:'🔥', msg:'ONE Chase slot left. Use it on the highest-value Chase personal card only.' });
-  if (cards524 <= 2) warns.push({ sev:'green', icon:'✅', msg:`You have ${slotsLeft} Chase 5/24 slots. Prioritize Chase before other banks.` });
+  if (cards524 <= 2) warns.push({ sev:'green', icon:'✅', msg:'You have ' + slotsLeft + ' Chase 5/24 slots. Prioritize Chase before other banks.' });
   if (!hasBiz) warns.push({ sev:'purple', icon:'💡', msg:"Chase Ink business cards don't require an incorporated business. Freelancing, eBay selling, or any side income qualifies. They don't count toward 5/24 AND have the best bonuses." });
 
   if (warns.length) {
-    html += `<div class="sec-head">Key Alerts</div><div class="warn-list">`;
-    warns.forEach(w => html += `<div class="wi ${w.sev}"><div class="wi-icon">${w.icon}</div><div style="font-size:.78rem;line-height:1.65">${w.msg}</div></div>`);
-    html += `</div>`;
+    html += '<div class="sec-head">Key Alerts</div><div class="warn-list">';
+    warns.forEach(function(w) { html += '<div class="wi ' + w.sev + '"><div class="wi-icon">' + w.icon + '</div><div style="font-size:.78rem;line-height:1.65">' + w.msg + '</div></div>'; });
+    html += '</div>';
   }
 
-  const timings = ['Apply Now','Apply in 3 months','Apply in 6 months','Apply in 9 months','Apply in 12 months'];
-  html += `<div class="sec-head">Priority Queue</div><div class="steps">`;
-  top5.forEach((c, i) => {
-    const topFlag = c.flags[0];
-    const liveTag = c.dataSource === 'fallback'
-      ? `<span style="font-size:.6rem;color:var(--warn)">⚠ fallback data</span>`
-      : `<span style="font-size:.6rem;color:var(--accent)">● live offer</span>`;
-    html += `<div class="step">
-      <div class="step-num">${i+1}</div>
-      <div>
-        <div class="step-title">${c.bank} ${c.name} ${liveTag}</div>
-        <div style="font-size:.72rem;color:var(--accent);margin:3px 0">${c.bonusPts} · $${c.minSpend.toLocaleString()} in ${c.days}d · $${c.fee}/yr fee · ~$${Math.max(0,c.netVal)} net</div>
-        <div class="step-desc">${c.why}</div>
-        ${topFlag ? `<div style="font-size:.72rem;margin-top:5px;color:${topFlag.t==='good'?'var(--accent)':'var(--warn)'}">${topFlag.m}</div>` : ''}
-        <div style="margin-top:7px"><span class="badge by">${timings[i]}</span></div>
-      </div>
-    </div>`;
+  var timings = ['Apply Now','Apply in 3 months','Apply in 6 months','Apply in 9 months','Apply in 12 months'];
+  html += '<div class="sec-head">Priority Queue</div><div class="steps">';
+  top5.forEach(function(c, i) {
+    var topFlag = c.flags[0];
+    var liveTag = c.dataSource === 'fallback' ? '<span style="font-size:.6rem;color:var(--warn)">⚠ fallback</span>' : '<span style="font-size:.6rem;color:var(--accent)">● live</span>';
+    html += '<div class="step"><div class="step-num">' + (i+1) + '</div><div>'
+      + '<div class="step-title">' + c.bank + ' ' + c.name + ' ' + liveTag + '</div>'
+      + '<div style="font-size:.72rem;color:var(--accent);margin:3px 0">' + c.bonusPts + ' · $' + c.minSpend.toLocaleString() + ' in ' + c.days + 'd · $' + c.fee + '/yr fee · ~$' + Math.max(0, c.netVal) + ' net</div>'
+      + '<div class="step-desc">' + c.why + '</div>'
+      + (topFlag ? '<div style="font-size:.72rem;margin-top:5px;color:' + (topFlag.t === 'good' ? 'var(--accent)' : 'var(--warn)') + '">' + topFlag.m + '</div>' : '')
+      + '<div style="margin-top:7px"><span class="badge by">' + timings[i] + '</span></div>'
+      + '</div></div>';
   });
-  html += `</div>`;
+  html += '</div>';
 
-  html += `<div class="sec-head" style="margin-top:20px">Timeline Rules</div>
-  <div class="warn-list"><div class="wi purple"><div class="wi-icon">📅</div>
-  <div style="font-size:.78rem;line-height:1.8">
-    <strong>Month 1:</strong> Apply for #1. Set up autopay immediately.<br>
-    <strong>Month 3:</strong> Once bonus posts, apply for #2.<br>
-    <strong>Month 6:</strong> Apply for #3. Evaluate Year 1 fees coming up.<br>
-    <strong>Hard Rule:</strong> Never more than 2 cards in 30 days.
-  </div></div></div>`;
+  html += '<div class="sec-head" style="margin-top:20px">Timeline Rules</div>'
+    + '<div class="warn-list"><div class="wi purple"><div class="wi-icon">📅</div>'
+    + '<div style="font-size:.78rem;line-height:1.8">'
+    + '<strong>Month 1:</strong> Apply for #1. Set up autopay immediately.<br>'
+    + '<strong>Month 3:</strong> Once bonus posts, apply for #2.<br>'
+    + '<strong>Month 6:</strong> Apply for #3. Evaluate Year 1 fees coming up.<br>'
+    + '<strong>Hard Rule:</strong> Never more than 2 cards in 30 days.'
+    + '</div></div></div>';
 
-  // ── HOW YOU'LL MAKE MONEY ──
-  const totalBonuses = top5.reduce((s,c) => s + c.bonus, 0);
-  const totalFees2 = top5.reduce((s,c) => s + c.fee, 0);
-  const totalCredits2 = top5.reduce((s,c) => s + (c.credits||0), 0);
-  const totalNet = totalBonuses - totalFees2 + totalCredits2;
-  const totalMinSpend2 = top5.reduce((s,c) => s + c.minSpend, 0);
-  const monthsToComplete = Math.ceil(totalMinSpend2 / monthlySpend);
-  const isTravel = goals.includes('flights')||goals.includes('hotels')||goals.includes('intl')||goals.includes('biz')||goals.includes('lounge');
-  const pointsCards2 = top5.filter(c => c.hasTransfers);
-  const totalPointsBonuses = pointsCards2.reduce((s,c) => s + c.bonus, 0);
-  const travelMult = goals.includes('biz') ? 2.0 : (goals.includes('lounge')||goals.includes('intl')) ? 1.8 : 1.5;
-  const pointsRealValue = Math.round(totalPointsBonuses * travelMult);
-  const annualEarn = Math.round(monthlySpend * 12 * (cats.length > 0 ? 2.5 : 1.5) * 0.01);
+  // HOW YOU'LL MAKE MONEY
+  var totalBonuses = top5.reduce(function(s,c) { return s + c.bonus; }, 0);
+  var totalFees2 = top5.reduce(function(s,c) { return s + c.fee; }, 0);
+  var totalCredits2 = top5.reduce(function(s,c) { return s + (c.credits || 0); }, 0);
+  var totalNet = totalBonuses - totalFees2 + totalCredits2;
+  var totalMinSpend2 = top5.reduce(function(s,c) { return s + c.minSpend; }, 0);
+  var monthsToComplete = Math.ceil(totalMinSpend2 / monthlySpend);
+  var isTravel = goals.indexOf('flights') !== -1 || goals.indexOf('hotels') !== -1 || goals.indexOf('intl') !== -1 || goals.indexOf('biz') !== -1 || goals.indexOf('lounge') !== -1;
+  var pointsCards2 = top5.filter(function(c) { return c.hasTransfers; });
+  var totalPointsBonuses = pointsCards2.reduce(function(s,c) { return s + c.bonus; }, 0);
+  var travelMult = goals.indexOf('biz') !== -1 ? 2.0 : (goals.indexOf('lounge') !== -1 || goals.indexOf('intl') !== -1) ? 1.8 : 1.5;
+  var pointsRealValue = Math.round(totalPointsBonuses * travelMult);
+  var annualEarn = Math.round(monthlySpend * 12 * (cats.length > 0 ? 2.5 : 1.5) * 0.01);
+  var perCard = Math.round(totalNet / top5.length);
 
   html += '<div class="sec-head" style="margin-top:28px">💰 How You\'ll Make Money</div>';
 
-  // Year 1 table
-  html += '<div style="background:var(--card);border:1px solid rgba(0,255,136,.2);border-radius:14px;padding:24px;margin-bottom:16px;">';
-  html += '<div style="font-family:Syne,sans-serif;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;">Year 1 Breakdown — Your Specific Cards</div>';
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px;">';
-  html += '<div style="background:var(--surface);border-radius:10px;padding:16px;text-align:center;"><div style="font-family:Syne,sans-serif;font-size:1.9rem;font-weight:800;color:var(--accent)">$' + totalBonuses.toLocaleString() + '</div><div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;margin-top:4px">Welcome Bonuses</div><div style="font-size:.68rem;color:var(--muted);margin-top:3px">' + top5.length + ' cards · ~' + monthsToComplete + ' months to earn</div></div>';
-  html += '<div style="background:var(--surface);border-radius:10px;padding:16px;text-align:center;"><div style="font-family:Syne,sans-serif;font-size:1.9rem;font-weight:800;color:var(--danger)">-$' + totalFees2.toLocaleString() + '</div><div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;margin-top:4px">Annual Fees</div><div style="font-size:.68rem;color:var(--muted);margin-top:3px">+$' + totalCredits2.toLocaleString() + ' in credits offset this</div></div>';
-  html += '<div style="background:var(--surface);border:1px solid rgba(0,255,136,.15);border-radius:10px;padding:16px;text-align:center;"><div style="font-family:Syne,sans-serif;font-size:1.9rem;font-weight:800;color:var(--accent)">$' + totalNet.toLocaleString() + '</div><div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;margin-top:4px">Net Profit Year 1</div><div style="font-size:.68rem;color:var(--accent);margin-top:3px">cash equivalent</div></div>';
-  html += '</div>';
-  top5.forEach(c => {
-    const net = c.bonus - c.fee + (c.credits||0);
-    const mo = c.minSpend === 0 ? '1 purchase' : '$' + c.minSpend.toLocaleString() + ' spend · ~' + Math.ceil(c.minSpend/monthlySpend) + 'mo';
-    html += '<div style="display:flex;align-items:center;gap:14px;padding:10px 0;border-top:1px solid var(--border);"><div style="flex:1;font-size:.78rem">' + c.bank + ' ' + c.name + '</div><div style="font-size:.72rem;color:var(--muted)">' + mo + '</div><div style="font-size:.85rem;font-family:Syne,sans-serif;font-weight:700;color:' + (net>0?'var(--accent)':'var(--danger)') + ';min-width:80px;text-align:right">' + (net>0?'+':'') + '$' + net.toLocaleString() + '</div></div>';
+  html += '<div class="money-box green">'
+    + '<div style="font-family:Syne,sans-serif;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;">Year 1 Breakdown — Your Specific Cards</div>'
+    + '<div class="money-grid">'
+    + '<div class="money-stat"><div class="money-big">$' + totalBonuses.toLocaleString() + '</div><div class="money-lbl">Welcome Bonuses</div><div class="money-sub">' + top5.length + ' cards · ~' + monthsToComplete + ' months to earn</div></div>'
+    + '<div class="money-stat"><div class="money-big red">-$' + totalFees2.toLocaleString() + '</div><div class="money-lbl">Annual Fees</div><div class="money-sub">+$' + totalCredits2.toLocaleString() + ' credits offset this</div></div>'
+    + '<div class="money-stat highlight"><div class="money-big">$' + totalNet.toLocaleString() + '</div><div class="money-lbl">Net Profit Year 1</div><div class="money-sub green">cash equivalent</div></div>'
+    + '</div>';
+
+  top5.forEach(function(c) {
+    var net = c.bonus - c.fee + (c.credits || 0);
+    var mo = c.minSpend === 0 ? '1 purchase' : '$' + c.minSpend.toLocaleString() + ' · ~' + Math.ceil(c.minSpend / monthlySpend) + 'mo';
+    html += '<div class="card-split">'
+      + '<div style="flex:1;font-size:.78rem">' + c.bank + ' ' + c.name + '</div>'
+      + '<div style="font-size:.72rem;color:var(--muted)">' + mo + '</div>'
+      + '<div style="font-size:.85rem;font-family:Syne,sans-serif;font-weight:700;color:' + (net > 0 ? 'var(--accent)' : 'var(--danger)') + ';min-width:80px;text-align:right">' + (net > 0 ? '+' : '') + '$' + net.toLocaleString() + '</div>'
+      + '</div>';
   });
   html += '</div>';
 
-  // Travel value section
   if (isTravel && pointsCards2.length > 0) {
-    html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:16px;">';
-    html += '<div style="font-family:Syne,sans-serif;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent2);margin-bottom:14px;">✈️ What Your Points Are Actually Worth</div>';
-    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">';
-    html += '<div style="background:var(--surface);border-radius:9px;padding:14px;"><div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;margin-bottom:6px">Cash Out</div><div style="font-family:Syne,sans-serif;font-size:1.4rem;font-weight:700;">$' + totalPointsBonuses.toLocaleString() + '</div><div style="font-size:.7rem;color:var(--muted);margin-top:3px">1 cent per point — minimum value</div></div>';
-    html += '<div style="background:var(--surface);border:1px solid rgba(162,89,255,.2);border-radius:9px;padding:14px;"><div style="font-size:.62rem;color:var(--accent2);text-transform:uppercase;margin-bottom:6px">Travel Transfers</div><div style="font-family:Syne,sans-serif;font-size:1.4rem;font-weight:700;color:var(--accent2)">$' + pointsRealValue.toLocaleString() + '</div><div style="font-size:.7rem;color:var(--muted);margin-top:3px">~' + travelMult + 'cpp via airline/hotel transfers</div></div>';
-    html += '</div>';
-    let travelTips = '<div style="font-size:.75rem;color:var(--muted);line-height:1.8;padding:12px;background:var(--surface);border-radius:8px;">';
-    if (goals.includes('biz')) travelTips += '💺 <strong style="color:var(--text)">Business class:</strong> Transfer Chase/Amex to Air France, ANA, or United. Your bonuses can book $3,000–$5,000 business class seats.<br>';
-    if (goals.includes('flights')) travelTips += '✈️ <strong style="color:var(--text)">Flights:</strong> Transfer to Southwest, United, or British Airways. 15,000–25,000 points = domestic flights worth $200–$400.<br>';
-    if (goals.includes('hotels')) travelTips += '🏨 <strong style="color:var(--text)">Hotels:</strong> Chase points transfer to Hyatt 1:1 — best value anywhere. 25,000 points = $300–$600/night rooms.<br>';
-    if (goals.includes('lounge')) travelTips += '🛋️ <strong style="color:var(--text)">Lounges:</strong> Free access worth $30–$60/visit. 10 flights/year = $300–$600 saved automatically.';
-    travelTips += '</div>';
-    html += travelTips + '</div>';
+    html += '<div class="money-box">'
+      + '<div style="font-family:Syne,sans-serif;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent2);margin-bottom:14px;">✈️ What Your Points Are Actually Worth</div>'
+      + '<div class="travel-grid">'
+      + '<div class="travel-box"><div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;margin-bottom:6px">Cash Out</div><div style="font-family:Syne,sans-serif;font-size:1.4rem;font-weight:700;">$' + totalPointsBonuses.toLocaleString() + '</div><div style="font-size:.7rem;color:var(--muted);margin-top:3px">1 cent per point — minimum value</div></div>'
+      + '<div class="travel-box purple"><div style="font-size:.62rem;color:var(--accent2);text-transform:uppercase;margin-bottom:6px">Travel Transfers</div><div style="font-family:Syne,sans-serif;font-size:1.4rem;font-weight:700;color:var(--accent2);">$' + pointsRealValue.toLocaleString() + '</div><div style="font-size:.7rem;color:var(--muted);margin-top:3px">~' + travelMult + 'cpp via airline/hotel transfers</div></div>'
+      + '</div><div class="tip-box">';
+    if (goals.indexOf('biz') !== -1) html += '💺 <strong style="color:var(--text)">Business class:</strong> Transfer Chase/Amex to Air France, ANA, or United. Your bonuses can book $3,000–$5,000 business class seats.<br>';
+    if (goals.indexOf('flights') !== -1) html += '✈️ <strong style="color:var(--text)">Flights:</strong> Transfer to Southwest, United, or British Airways. 15,000–25,000 points = domestic flights worth $200–$400.<br>';
+    if (goals.indexOf('hotels') !== -1) html += '🏨 <strong style="color:var(--text)">Hotels:</strong> Chase points transfer to Hyatt 1:1 — best value anywhere. 25,000 points = $300–$600/night rooms.<br>';
+    if (goals.indexOf('lounge') !== -1) html += '🛋️ <strong style="color:var(--text)">Lounges:</strong> Free access worth $30–$60/visit. 10 flights/year = $300–$600 saved automatically.';
+    html += '</div></div>';
   }
 
-  // Ongoing value
-  html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:16px;">';
-  html += '<div style="font-family:Syne,sans-serif;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:14px;">📈 Ongoing Annual Value After Year 1</div>';
-  top5.forEach(c => {
-    const keeperVal = (c.credits||0) - c.fee;
-    const matchedCats = (c.cats||[]).filter(cc => cats.includes(cc));
-    html += '<div style="padding:10px 0;border-top:1px solid var(--border);font-size:.75rem;line-height:1.7;">';
-    html += '<div style="font-weight:600;color:var(--text);margin-bottom:2px">' + c.bank + ' ' + c.name + '</div>';
-    if (matchedCats.length > 0) html += '<div style="color:var(--muted)">Earns bonus points on: ' + matchedCats.join(', ') + '</div>';
-    else html += '<div style="color:var(--muted)">Earns 1–2x on all purchases</div>';
-    if (keeperVal > 0) html += '<div style="color:var(--accent)">Credits exceed fee by $' + keeperVal + ' — free to keep every year</div>';
-    else if (c.fee > 0) html += '<div style="color:var(--warn)">At 11 months: keep, downgrade, or cancel before $' + c.fee + ' fee hits again</div>';
-    else html += '<div style="color:var(--accent)">No annual fee — keep forever</div>';
-    html += '</div>';
+  html += '<div class="money-box">'
+    + '<div style="font-family:Syne,sans-serif;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:14px;">📈 Ongoing Annual Value After Year 1</div>';
+  top5.forEach(function(c) {
+    var keeperVal = (c.credits || 0) - c.fee;
+    var matchedCats = (c.cats || []).filter(function(cc) { return cats.indexOf(cc) !== -1; });
+    html += '<div class="ongoing-row">'
+      + '<div style="font-weight:600;color:var(--text);margin-bottom:2px">' + c.bank + ' ' + c.name + '</div>'
+      + (matchedCats.length > 0 ? '<div style="color:var(--muted)">Earns bonus on: ' + matchedCats.join(', ') + '</div>' : '<div style="color:var(--muted)">Earns 1–2x on all purchases</div>')
+      + (keeperVal > 0 ? '<div style="color:var(--accent)">Credits exceed fee by $' + keeperVal + ' — free to keep every year</div>' : '')
+      + (c.fee > 0 && keeperVal <= 0 ? '<div style="color:var(--warn)">At 11 months: keep, downgrade, or cancel before $' + c.fee + ' hits again</div>' : '')
+      + (c.fee === 0 ? '<div style="color:var(--accent)">No annual fee — keep forever</div>' : '')
+      + '</div>';
   });
-  html += '<div style="margin-top:14px;padding:12px;background:var(--surface);border-radius:8px;font-size:.75rem;color:var(--muted);line-height:1.7;">At $' + monthlySpend.toLocaleString() + '/mo spend, expect roughly <strong style="color:var(--accent)">$' + annualEarn.toLocaleString() + '/year</strong> in ongoing rewards from normal spending on keeper cards.</div>';
-  html += '</div>';
+  html += '<div style="margin-top:14px;padding:12px;background:var(--surface);border-radius:8px;font-size:.75rem;color:var(--muted);">At $' + monthlySpend.toLocaleString() + '/mo spend, expect roughly <strong style="color:var(--accent)">$' + annualEarn.toLocaleString() + '/year</strong> in ongoing rewards from normal spending.</div></div>';
 
-  // Long game
-  const perCard = Math.round(totalNet / top5.length);
-  html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;">';
-  html += '<div style="font-family:Syne,sans-serif;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:14px;">🔄 The Long Game — How to Keep Making Money Every Year</div>';
-  html += '<div style="display:flex;flex-direction:column;gap:10px;">';
-  html += '<div style="padding:12px;background:var(--surface);border-radius:8px;border-left:3px solid var(--accent);font-size:.78rem;line-height:1.75;color:var(--muted);"><strong style="color:var(--text)">Hit the bonus, bank the rewards.</strong> Spend exactly what you need for the minimum — the bonus is the money maker, not the ongoing earn rate.</div>';
-  html += '<div style="padding:12px;background:var(--surface);border-radius:8px;border-left:3px solid var(--accent2);font-size:.78rem;line-height:1.75;color:var(--muted);"><strong style="color:var(--text)">Decide at 11 months.</strong> Before each annual fee hits: do credits + rewards exceed the fee? Keep it. If not, downgrade to the no-fee version. Never close cards — that hurts your score.</div>';
-  html += '<div style="padding:12px;background:var(--surface);border-radius:8px;border-left:3px solid var(--warn);font-size:.78rem;line-height:1.75;color:var(--muted);"><strong style="color:var(--text)">Watch your 5/24 slots open up.</strong> Cards age off 5/24 exactly 24 months after opening. As they drop off, Chase slots reopen and you repeat the highest-value cards.</div>';
-  html += '<div style="padding:12px;background:var(--surface);border-radius:8px;border-left:3px solid var(--good);font-size:.78rem;line-height:1.75;color:var(--muted);"><strong style="color:var(--text)">Steady state: 2–3 cards/year.</strong> At your spend level that\'s roughly <strong style="color:var(--accent)">$' + (perCard*2).toLocaleString() + '–$' + (perCard*3).toLocaleString() + '/year</strong> in bonuses on autopilot once you\'re in the rhythm.</div>';
-  html += '</div></div>';
-
-  </div></div></div>`;
+  html += '<div class="money-box">'
+    + '<div style="font-family:Syne,sans-serif;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:14px;">🔄 The Long Game</div>'
+    + '<div class="cycle-step" style="border-left:3px solid var(--accent)"><strong style="color:var(--text)">Hit the bonus, bank the rewards.</strong> Spend exactly what you need for the minimum — the bonus is the money maker.</div>'
+    + '<div class="cycle-step" style="border-left:3px solid var(--accent2)"><strong style="color:var(--text)">Decide at 11 months.</strong> Do credits + rewards exceed the fee? Keep it. If not, downgrade to no-fee version. Never close cards.</div>'
+    + '<div class="cycle-step" style="border-left:3px solid var(--warn)"><strong style="color:var(--text)">Watch your 5/24 slots open up.</strong> Cards age off exactly 24 months after opening. As they drop off, repeat the highest-value cards.</div>'
+    + '<div class="cycle-step" style="border-left:3px solid var(--good)"><strong style="color:var(--text)">Steady state: 2–3 cards/year.</strong> At your spend level that\'s <strong style="color:var(--accent)">$' + (perCard * 2).toLocaleString() + '–$' + (perCard * 3).toLocaleString() + '/year</strong> in bonuses on autopilot.</div>'
+    + '</div>';
 
   showResult(html);
 }
@@ -645,10 +584,7 @@ function showResult(html) {
   document.getElementById('result').scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
-// ═══════════════════════════════════════════
-// DASHBOARD
-// ═══════════════════════════════════════════
-let myCards = [
+var myCards = [
   { name:'Chase Sapphire Preferred', bank:'Chase', bonus:750, minSpend:4000, spent:2800, daysLeft:23, fee:95, status:'active' },
   { name:'Amex Gold Card', bank:'Amex', bonus:600, minSpend:4000, spent:4000, daysLeft:47, fee:250, status:'done', feeAlert:true },
   { name:'Capital One Venture X', bank:'Capital One', bonus:750, minSpend:4000, spent:1200, daysLeft:68, fee:395, status:'active' },
@@ -656,160 +592,107 @@ let myCards = [
 ];
 
 function renderDash() {
-  const earned = myCards.filter(c=>['complete','done'].includes(c.status)).reduce((s,c)=>s+c.bonus,0);
-  const active = myCards.filter(c=>c.status==='active');
-  const nearestDl = active.length ? Math.min(...active.map(c=>c.daysLeft)) : 0;
-  const totalFees = myCards.reduce((s,c)=>s+c.fee,0);
-
-  document.getElementById('stats').innerHTML = `
-    <div class="stat"><div class="stat-l">Bonuses Earned</div><div class="stat-v">$${earned.toLocaleString()}</div><div class="stat-s">This cycle</div></div>
-    <div class="stat"><div class="stat-l">Active Cards</div><div class="stat-v">${myCards.length}</div><div class="stat-s">${active.length} bonuses in progress</div></div>
-    <div class="stat"><div class="stat-l">Next Deadline</div><div class="stat-v" style="color:${nearestDl<30?'var(--danger)':'var(--warn)'}">${nearestDl}d</div><div class="stat-s">Days remaining</div></div>
-    <div class="stat"><div class="stat-l">Annual Fees</div><div class="stat-v">$${totalFees}</div><div class="stat-s">Total yearly cost</div></div>`;
-
-  const alerts = [];
-  myCards.forEach(c => {
-    if (c.status==='active'&&c.daysLeft<30) alerts.push({ t:'urgent',i:'🔴',title:`${c.name} — ${c.daysLeft} days left`,sub:`Spent $${c.spent.toLocaleString()} of $${c.minSpend.toLocaleString()}. Need $${(c.minSpend-c.spent).toLocaleString()} more.` });
-    if (c.feeAlert) alerts.push({ t:'warn',i:'⚠️',title:`${c.name} — $${c.fee} annual fee due in ${c.daysLeft} days`,sub:'Decide: keep, downgrade to no-fee version, or cancel.' });
+  var earned = myCards.filter(function(c) { return c.status === 'complete' || c.status === 'done'; }).reduce(function(s,c) { return s + c.bonus; }, 0);
+  var active = myCards.filter(function(c) { return c.status === 'active'; });
+  var nearestDl = active.length ? Math.min.apply(null, active.map(function(c) { return c.daysLeft; })) : 0;
+  var totalFees = myCards.reduce(function(s,c) { return s + c.fee; }, 0);
+  document.getElementById('stats').innerHTML = '<div class="stat"><div class="stat-l">Bonuses Earned</div><div class="stat-v">$' + earned.toLocaleString() + '</div><div class="stat-s">This cycle</div></div>'
+    + '<div class="stat"><div class="stat-l">Active Cards</div><div class="stat-v">' + myCards.length + '</div><div class="stat-s">' + active.length + ' bonuses in progress</div></div>'
+    + '<div class="stat"><div class="stat-l">Next Deadline</div><div class="stat-v" style="color:' + (nearestDl < 30 ? 'var(--danger)' : 'var(--warn)') + '">' + nearestDl + 'd</div><div class="stat-s">Days remaining</div></div>'
+    + '<div class="stat"><div class="stat-l">Annual Fees</div><div class="stat-v">$' + totalFees + '</div><div class="stat-s">Total yearly cost</div></div>';
+  var alerts = [];
+  myCards.forEach(function(c) {
+    if (c.status === 'active' && c.daysLeft < 30) alerts.push({ t:'urgent', i:'🔴', title: c.name + ' — ' + c.daysLeft + ' days left', sub: 'Spent $' + c.spent.toLocaleString() + ' of $' + c.minSpend.toLocaleString() + '. Need $' + (c.minSpend - c.spent).toLocaleString() + ' more.' });
+    if (c.feeAlert) alerts.push({ t:'warn', i:'⚠️', title: c.name + ' — $' + c.fee + ' annual fee due in ' + c.daysLeft + ' days', sub: 'Decide: keep, downgrade to no-fee version, or cancel.' });
   });
-  if (!alerts.length) alerts.push({ t:'good',i:'✅',title:'No urgent alerts',sub:'All timelines on track.' });
-
-  document.getElementById('alerts').innerHTML = alerts.map(a=>`
-    <div class="alert ${a.t}">
-      <div style="font-size:1.1rem;flex-shrink:0">${a.i}</div>
-      <div><div class="alert-t">${a.title}</div><div class="alert-s">${a.sub}</div></div>
-    </div>`).join('');
-
-  document.getElementById('cardList').innerHTML = myCards.map(c => {
-    const pct = Math.min(100, Math.round(c.spent/c.minSpend*100));
-    const badge = c.status==='complete'?'<span class="badge bg">COMPLETE</span>'
-      :c.status==='done'?'<span class="badge bp">BONUS EARNED</span>'
-      :c.daysLeft<30?'<span class="badge br">URGENT</span>'
-      :'<span class="badge by">IN PROGRESS</span>';
-    return `<div class="card-row">
-      <div><div class="cn">${c.name}</div><div class="cm">${c.bank} · $${c.fee}/yr · $${c.bonus} bonus</div></div>
-      <div>
-        <div class="prog-lbl"><span>Spend</span><span>$${c.spent.toLocaleString()} / $${c.minSpend.toLocaleString()}</span></div>
-        <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
-      </div>
-      ${badge}
-      <div class="dl"><div class="dl-n" style="color:${c.daysLeft<30&&c.status==='active'?'var(--danger)':'var(--muted)'}">${c.daysLeft}</div><div style="font-size:.6rem;color:var(--muted)">days left</div></div>
-    </div>`;
+  if (!alerts.length) alerts.push({ t:'good', i:'✅', title:'No urgent alerts', sub:'All timelines on track.' });
+  document.getElementById('alerts').innerHTML = alerts.map(function(a) { return '<div class="alert ' + a.t + '"><div style="font-size:1.1rem;flex-shrink:0">' + a.i + '</div><div><div class="alert-t">' + a.title + '</div><div class="alert-s">' + a.sub + '</div></div></div>'; }).join('');
+  document.getElementById('cardList').innerHTML = myCards.map(function(c) {
+    var pct = Math.min(100, Math.round(c.spent / c.minSpend * 100));
+    var badge = c.status === 'complete' ? '<span class="badge bg">COMPLETE</span>' : c.status === 'done' ? '<span class="badge bp">BONUS EARNED</span>' : c.daysLeft < 30 ? '<span class="badge br">URGENT</span>' : '<span class="badge by">IN PROGRESS</span>';
+    return '<div class="card-row"><div><div class="cn">' + c.name + '</div><div class="cm">' + c.bank + ' · $' + c.fee + '/yr · $' + c.bonus + ' bonus</div></div><div><div class="prog-lbl"><span>Spend</span><span>$' + c.spent.toLocaleString() + ' / $' + c.minSpend.toLocaleString() + '</span></div><div class="prog-bar"><div class="prog-fill" style="width:' + pct + '%"></div></div></div>' + badge + '<div class="dl"><div class="dl-n" style="color:' + (c.daysLeft < 30 && c.status === 'active' ? 'var(--danger)' : 'var(--muted)') + '">' + c.daysLeft + '</div><div style="font-size:.6rem;color:var(--muted)">days left</div></div></div>';
   }).join('');
 }
 
 function toggleAddForm() { document.getElementById('addForm').classList.toggle('on'); }
+
 function addCard() {
-  const name = document.getElementById('f_name').value;
+  var name = document.getElementById('f_name').value;
   if (!name) return;
-  myCards.push({ name, bank:'New', bonus:parseInt(document.getElementById('f_bonus').value)||0, minSpend:parseInt(document.getElementById('f_min').value)||0, spent:parseInt(document.getElementById('f_spent').value)||0, daysLeft:parseInt(document.getElementById('f_days').value)||90, fee:parseInt(document.getElementById('f_fee').value)||0, status:'active' });
+  myCards.push({ name: name, bank: 'New', bonus: parseInt(document.getElementById('f_bonus').value)||0, minSpend: parseInt(document.getElementById('f_min').value)||0, spent: parseInt(document.getElementById('f_spent').value)||0, daysLeft: parseInt(document.getElementById('f_days').value)||90, fee: parseInt(document.getElementById('f_fee').value)||0, status: 'active' });
   renderDash();
   document.getElementById('addForm').classList.remove('on');
-  ['f_name','f_bonus','f_min','f_spent','f_days','f_fee'].forEach(id => document.getElementById(id).value='');
+  ['f_name','f_bonus','f_min','f_spent','f_days','f_fee'].forEach(function(id) { document.getElementById(id).value = ''; });
 }
 
-// ═══════════════════════════════════════════
-// CARD BROWSER
-// ═══════════════════════════════════════════
 function filterCards(el, type) {
-  document.querySelectorAll('.filter-bar .btn').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.filter-bar .btn').forEach(function(b) { b.classList.remove('on'); });
   if (el) el.classList.add('on');
-  const cards = CARDS.length > 0 ? CARDS : FALLBACK_CARDS;
-  let list = [...cards];
-  if (type==='travel') list = list.filter(c=>c.type==='travel');
-  else if (type==='cashback') list = list.filter(c=>c.type==='cashback');
-  else if (type==='business') list = list.filter(c=>c.isBiz);
-  else if (type==='nofee') list = list.filter(c=>c.fee===0);
-  else if (type==='easy') list = list.filter(c=>c.easyMin||c.minSpend===0||c.minSpend<=1500);
-  list.sort((a,b)=>b.roi-a.roi);
-
-  document.getElementById('recGrid').innerHTML = list.map((c,i) => {
-    const netVal = c.netVal ?? (c.bonus - c.fee + (c.credits||0));
-    const sourceTag = c.dataSource === 'fallback'
-      ? `<span class="src-fallback">⚠ cached</span>`
-      : `<span class="src-live">● live</span>`;
-    return `<div class="rec">
-      <div class="rec-rank">${i+1}</div>
-      <div class="rec-bank">${c.bank}</div>
-      <div class="rec-name">${c.name}</div>
-      <div class="rec-bonus"><span class="rec-big">${c.bonusPts||c.bonus+' pts'}</span><span class="rec-unit">welcome bonus</span></div>
-      <div class="rec-rows">
-        <div class="rec-row"><span>Min Spend</span><span>${c.minSpend===0?'None — 1st purchase':'$'+c.minSpend.toLocaleString()+' / '+c.days+'d'}</span></div>
-        <div class="rec-row"><span>Net Value</span><span style="color:var(--accent)">~$${Math.max(0,netVal)}</span></div>
-        <div class="rec-row"><span>Annual Fee</span><span>${c.fee===0?'None':'$'+c.fee+'/yr'}</span></div>
-        <div class="rec-row"><span>5/24 Required</span><span>${c.rule524?'Yes':'No'}</span></div>
-      </div>
-      <div class="rec-why">💡 ${c.why}</div>
-      <div class="rec-source">${sourceTag} <span style="color:var(--muted)">· ROI ${c.roi}/10</span></div>
-      <div class="roi-track"><div class="roi-fill" style="width:${c.roi*10}%"></div></div>
-    </div>`;
+  var cards = CARDS.length > 0 ? CARDS : FALLBACK_CARDS;
+  var list = cards.slice();
+  if (type === 'travel') list = list.filter(function(c) { return c.type === 'travel'; });
+  else if (type === 'cashback') list = list.filter(function(c) { return c.type === 'cashback'; });
+  else if (type === 'business') list = list.filter(function(c) { return c.isBiz; });
+  else if (type === 'nofee') list = list.filter(function(c) { return c.fee === 0; });
+  else if (type === 'easy') list = list.filter(function(c) { return c.easyMin || c.minSpend === 0 || c.minSpend <= 1500; });
+  list.sort(function(a,b) { return b.roi - a.roi; });
+  document.getElementById('recGrid').innerHTML = list.map(function(c, i) {
+    var netVal = c.netVal !== undefined ? c.netVal : (c.bonus - c.fee + (c.credits || 0));
+    var sourceTag = c.dataSource === 'fallback' ? '<span class="src-fallback">⚠ cached</span>' : '<span class="src-live">● live</span>';
+    return '<div class="rec"><div class="rec-rank">' + (i+1) + '</div><div class="rec-bank">' + c.bank + '</div><div class="rec-name">' + c.name + '</div><div class="rec-bonus"><span class="rec-big">' + (c.bonusPts || c.bonus + ' pts') + '</span><span class="rec-unit">welcome bonus</span></div><div class="rec-rows"><div class="rec-row"><span>Min Spend</span><span>' + (c.minSpend === 0 ? 'None — 1st purchase' : '$' + c.minSpend.toLocaleString() + ' / ' + c.days + 'd') + '</span></div><div class="rec-row"><span>Net Value</span><span style="color:var(--accent)">~$' + Math.max(0, netVal) + '</span></div><div class="rec-row"><span>Annual Fee</span><span>' + (c.fee === 0 ? 'None' : '$' + c.fee + '/yr') + '</span></div><div class="rec-row"><span>5/24 Required</span><span>' + (c.rule524 ? 'Yes' : 'No') + '</span></div></div><div class="rec-why">💡 ' + c.why + '</div><div class="rec-source">' + sourceTag + ' <span style="color:var(--muted)">· ROI ' + c.roi + '/10</span></div><div class="roi-track"><div class="roi-fill" style="width:' + (c.roi * 10) + '%"></div></div></div>';
   }).join('');
 }
 
-// ═══════════════════════════════════════════
-// BANK RULES
-// ═══════════════════════════════════════════
-const BANK_RULES = [
+var BANK_RULES = [
   { bank:'Chase', rules:[
     { name:'5/24 Rule', sev:'red', desc:'If you have opened 5+ personal credit cards (any bank) in the last 24 months, Chase auto-denies you. ALWAYS hit Chase first before other banks.' },
-    { name:'Sapphire 48-Month Rule', sev:'red', desc:'You can only earn the Sapphire Preferred OR Sapphire Reserve bonus once every 48 months. Cannot hold both simultaneously.' },
+    { name:'Sapphire 48-Month Rule', sev:'red', desc:'You can only earn the Sapphire Preferred OR Sapphire Reserve bonus once every 48 months.' },
     { name:'2/30 Rule', sev:'yellow', desc:'Chase rarely approves more than 2 cards in 30 days. Safest: 1 personal + 1 business per 30 days.' },
-    { name:'Business Cards Skip 5/24 Count', sev:'green', desc:"Ink cards don't add to your 5/24 count. But you still need to BE under 5/24 to be approved." },
+    { name:'Business Cards Skip 5/24', sev:'green', desc:"Ink cards don't add to your 5/24 count. But you still need to BE under 5/24 to be approved." },
   ]},
   { bank:'American Express', rules:[
-    { name:'Once Per Lifetime Bonus Rule', sev:'red', desc:"Amex awards each card's welcome bonus only once per lifetime. Check eligibility before applying — look for 'welcome offer not available' language." },
-    { name:'Popup Jail', sev:'red', desc:"If Amex suspects churning, a popup says you're 'not eligible for the welcome offer.' Don't accept the card without the bonus — walk away." },
-    { name:'2/90 Application Rule', sev:'yellow', desc:'Amex limits approvals to ~2 cards per 90 days. Space applications at least 90 days apart.' },
+    { name:'Once Per Lifetime Bonus', sev:'red', desc:"Amex awards each card's welcome bonus only once per lifetime. Check eligibility before applying." },
+    { name:'Popup Jail', sev:'red', desc:"If Amex suspects churning, a popup says you're not eligible for the welcome offer. Don't accept without the bonus." },
+    { name:'2/90 Application Rule', sev:'yellow', desc:'Amex limits approvals to ~2 cards per 90 days.' },
     { name:'No 5/24 Equivalent', sev:'green', desc:"Amex doesn't track other banks' cards. Apply regardless of your 5/24 status." },
   ]},
   { bank:'Capital One', rules:[
-    { name:'Triple Bureau Pull', sev:'red', desc:'Capital One pulls ALL THREE credit bureaus on every application — 3 hard inquiries at once. Space Cap1 applications very carefully.' },
+    { name:'Triple Bureau Pull', sev:'red', desc:'Capital One pulls ALL THREE credit bureaus on every application — 3 hard inquiries at once.' },
     { name:'6–12 Month Velocity', sev:'yellow', desc:'Cap1 typically approves 1 new card every 6–12 months.' },
     { name:'2 Card Maximum', sev:'yellow', desc:"Won't approve a 3rd if you already have 2 Capital One accounts open." },
   ]},
   { bank:'Citi', rules:[
-    { name:'48/8 Rule', sev:'red', desc:'Cannot earn the same Citi card bonus more than once every 48 months. No new Citi card if you opened/closed a Citi card in the last 8 days.' },
-    { name:'24/65 Velocity', sev:'yellow', desc:'Max 1 Citi card per 8 days, 2 per 65 days. Space Citi applications 65+ days apart.' },
+    { name:'48/8 Rule', sev:'red', desc:'Cannot earn the same Citi card bonus more than once every 48 months.' },
+    { name:'24/65 Velocity', sev:'yellow', desc:'Max 1 Citi card per 8 days, 2 per 65 days.' },
   ]},
   { bank:'Wells Fargo', rules:[
-    { name:'No Known Velocity Rules', sev:'green', desc:'WF has no documented velocity restrictions. Same-day approvals reported. Most forgiving major bank for churning.' },
+    { name:'No Known Velocity Rules', sev:'green', desc:'WF has no documented velocity restrictions. Most forgiving major bank for churning.' },
     { name:'12-Month Same Card Rule', sev:'yellow', desc:"Can't reapply for the same WF card within 12 months of opening or closing it." },
   ]},
   { bank:'Barclays', rules:[
-    { name:'Fully Independent', sev:'green', desc:'Barclays operates outside the Chase/Amex/Citi ecosystem. No 5/24 equivalent, no shared blacklists.' },
-    { name:'Some Cards: 1st Purchase Bonus', sev:'green', desc:'AAdvantage Aviator requires only 1 purchase for the bonus — no minimum spend threshold at all.' },
+    { name:'Fully Independent', sev:'green', desc:'Barclays operates outside the Chase/Amex/Citi ecosystem. No 5/24 equivalent.' },
+    { name:'1st Purchase Bonus', sev:'green', desc:'AAdvantage Aviator requires only 1 purchase for the bonus — no minimum spend threshold.' },
   ]},
 ];
 
 function renderRules() {
-  document.getElementById('rulesBody').innerHTML = BANK_RULES.map(b => `
-    <div style="margin-bottom:30px">
-      <div class="sec-head">${b.bank}</div>
-      <div class="warn-list">
-        ${b.rules.map(r => `
-          <div class="wi ${r.sev}">
-            <div style="min-width:170px;font-size:.72rem;font-weight:600;color:var(--text);flex-shrink:0">${r.name}</div>
-            <div style="font-size:.75rem;color:var(--muted);line-height:1.65">${r.desc}</div>
-          </div>`).join('')}
-      </div>
-    </div>`).join('');
+  document.getElementById('rulesBody').innerHTML = BANK_RULES.map(function(b) {
+    return '<div style="margin-bottom:30px"><div class="sec-head">' + b.bank + '</div><div class="warn-list">'
+      + b.rules.map(function(r) { return '<div class="wi ' + r.sev + '"><div style="min-width:170px;font-size:.72rem;font-weight:600;color:var(--text);flex-shrink:0">' + r.name + '</div><div style="font-size:.75rem;color:var(--muted);line-height:1.65">' + r.desc + '</div></div>'; }).join('')
+      + '</div></div>';
+  }).join('');
 }
 
-// ═══════════════════════════════════════════
-// NAV + UTILS
-// ═══════════════════════════════════════════
 function goTab(el, pageId) {
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('on'); });
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('on'); });
   el.classList.add('on');
   document.getElementById(pageId).classList.add('on');
-  if (pageId==='dashboard') renderDash();
-  if (pageId==='cards') filterCards(document.querySelector('.filter-bar .btn'), 'all');
-  if (pageId==='rules') renderRules();
+  if (pageId === 'dashboard') renderDash();
+  if (pageId === 'cards') filterCards(document.querySelector('.filter-bar .btn'), 'all');
+  if (pageId === 'rules') renderRules();
 }
-function toggleChip(el) { el.classList.toggle('on'); }
 
-// Init
 renderDash();
 renderRules();
 loadData();
