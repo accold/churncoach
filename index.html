@@ -366,23 +366,105 @@ var AFFILIATE_LINKS = {
 // ═══════════════════════════════════════════════════
 
 function getApplyUrl(card) {
-  // Direct ID match first
+  // Affiliate link override first
   if (AFFILIATE_LINKS[card.id]) return AFFILIATE_LINKS[card.id];
-  // Name-based match for scraped cards
-  var name = (card.name + ' ' + (card.bank || '')).toLowerCase();
-  if (name.includes('sapphire preferred'))   return AFFILIATE_LINKS['csp'] || card.applyUrl || '';
-  if (name.includes('sapphire reserve'))     return AFFILIATE_LINKS['csr'] || card.applyUrl || '';
-  if (name.includes('ink') && name.includes('preferred')) return AFFILIATE_LINKS['ibp'] || card.applyUrl || '';
-  if (name.includes('ink') && name.includes('unlimited')) return AFFILIATE_LINKS['ibu'] || card.applyUrl || '';
-  if (name.includes('freedom flex'))         return AFFILIATE_LINKS['ff'] || card.applyUrl || '';
-  if (name.includes('platinum') && name.includes('amex')) return AFFILIATE_LINKS['amexplat'] || card.applyUrl || '';
-  if (name.includes('gold') && name.includes('amex'))     return AFFILIATE_LINKS['amexgold'] || card.applyUrl || '';
-  if (name.includes('venture x'))            return AFFILIATE_LINKS['venturex'] || card.applyUrl || '';
-  if (name.includes('strata'))               return AFFILIATE_LINKS['strata'] || card.applyUrl || '';
-  if (name.includes('double cash'))          return AFFILIATE_LINKS['doubecash'] || card.applyUrl || '';
-  if (name.includes('autograph journey'))    return AFFILIATE_LINKS['wfaj'] || card.applyUrl || '';
-  if (name.includes('aviator'))              return AFFILIATE_LINKS['barcavoy'] || card.applyUrl || '';
-  return card.applyUrl || '';
+  // If card already has a URL, use it
+  if (card.applyUrl) return card.applyUrl;
+  // Name-based fallback for scraped cards — direct bank links
+  var name = ((card.name || '') + ' ' + (card.bank || '')).toLowerCase();
+  var bank = (card.bank || '').toLowerCase();
+
+  // Chase
+  if (name.includes('sapphire preferred'))    return 'https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred';
+  if (name.includes('sapphire reserve'))      return 'https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve';
+  if (name.includes('ink') && name.includes('preferred')) return 'https://creditcards.chase.com/business-credit-cards/ink/preferred';
+  if (name.includes('ink') && name.includes('unlimited')) return 'https://creditcards.chase.com/business-credit-cards/ink/unlimited';
+  if (name.includes('ink') && name.includes('cash'))      return 'https://creditcards.chase.com/business-credit-cards/ink/cash';
+  if (name.includes('freedom flex'))          return 'https://creditcards.chase.com/cash-back-credit-cards/freedom/flex';
+  if (name.includes('freedom unlimited'))     return 'https://creditcards.chase.com/cash-back-credit-cards/freedom/unlimited';
+  if (name.includes('freedom') && bank.includes('chase')) return 'https://creditcards.chase.com/cash-back-credit-cards/freedom';
+  if (name.includes('united') && name.includes('explorer')) return 'https://creditcards.chase.com/travel-credit-cards/united/explorer';
+  if (name.includes('united') && name.includes('club'))   return 'https://creditcards.chase.com/travel-credit-cards/united/club';
+  if (name.includes('united') && bank.includes('chase'))  return 'https://creditcards.chase.com/travel-credit-cards/united';
+  if (name.includes('marriott') && bank.includes('chase')) return 'https://creditcards.chase.com/travel-credit-cards/marriott';
+  if (name.includes('southwest') && name.includes('priority')) return 'https://creditcards.chase.com/travel-credit-cards/southwest/priority';
+  if (name.includes('southwest') && name.includes('plus'))    return 'https://creditcards.chase.com/travel-credit-cards/southwest/plus';
+  if (name.includes('southwest') && bank.includes('chase'))   return 'https://creditcards.chase.com/travel-credit-cards/southwest';
+  if (name.includes('world of hyatt'))        return 'https://creditcards.chase.com/travel-credit-cards/hyatt';
+  if (name.includes('ihg') && name.includes('premier')) return 'https://creditcards.chase.com/travel-credit-cards/ihg/premier';
+  if (bank.includes('chase'))                 return 'https://creditcards.chase.com';
+
+  // Amex
+  if (name.includes('platinum') && bank.includes('amex')) return 'https://www.americanexpress.com/us/credit-cards/card/platinum/';
+  if (name.includes('gold') && bank.includes('amex'))     return 'https://www.americanexpress.com/us/credit-cards/card/gold-card/';
+  if (name.includes('green') && bank.includes('amex'))    return 'https://www.americanexpress.com/us/credit-cards/card/american-express-green-card/';
+  if (name.includes('blue cash preferred'))   return 'https://www.americanexpress.com/us/credit-cards/card/blue-cash-preferred/';
+  if (name.includes('blue cash everyday'))    return 'https://www.americanexpress.com/us/credit-cards/card/blue-cash-everyday/';
+  if (name.includes('blue business plus'))    return 'https://www.americanexpress.com/us/credit-cards/card/blue-business-plus/';
+  if (name.includes('business platinum') && bank.includes('amex')) return 'https://www.americanexpress.com/us/credit-cards/card/business-platinum/';
+  if (name.includes('business gold') && bank.includes('amex'))     return 'https://www.americanexpress.com/us/credit-cards/card/business-gold/';
+  if (name.includes('delta') && name.includes('reserve')) return 'https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-reserve/';
+  if (name.includes('delta') && name.includes('platinum')) return 'https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-platinum/';
+  if (name.includes('delta') && name.includes('gold'))    return 'https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-gold/';
+  if (name.includes('delta') && bank.includes('amex'))    return 'https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-gold/';
+  if (name.includes('hilton') && name.includes('aspire')) return 'https://www.americanexpress.com/us/credit-cards/card/hilton-honors-aspire/';
+  if (name.includes('hilton') && name.includes('surpass')) return 'https://www.americanexpress.com/us/credit-cards/card/hilton-honors-surpass/';
+  if (name.includes('hilton') && bank.includes('amex'))   return 'https://www.americanexpress.com/us/credit-cards/card/hilton-honors/';
+  if (name.includes('marriott') && bank.includes('amex')) return 'https://www.americanexpress.com/us/credit-cards/card/marriott-bonvoy-brilliant/';
+  if (bank.includes('amex') || bank.includes('american express')) return 'https://www.americanexpress.com/us/credit-cards/';
+
+  // Capital One
+  if (name.includes('venture x'))             return 'https://creditcards.capitalone.com/venture-x-credit-card/';
+  if (name.includes('venture one') || name.includes('ventureone')) return 'https://creditcards.capitalone.com/ventureone-credit-card/';
+  if (name.includes('venture') && bank.includes('capital one')) return 'https://creditcards.capitalone.com/venture-credit-card/';
+  if (name.includes('savor') && name.includes('one'))  return 'https://creditcards.capitalone.com/savorone-credit-card/';
+  if (name.includes('savor') && bank.includes('capital one')) return 'https://creditcards.capitalone.com/savor-credit-card/';
+  if (bank.includes('capital one'))            return 'https://creditcards.capitalone.com';
+
+  // Citi
+  if (name.includes('strata premier'))        return 'https://www.citi.com/credit-cards/citi-strata-premier-credit-card';
+  if (name.includes('double cash'))           return 'https://www.citi.com/credit-cards/citi-double-cash-credit-card';
+  if (name.includes('custom cash'))           return 'https://www.citi.com/credit-cards/citi-custom-cash-credit-card';
+  if (name.includes('aa') || name.includes('aadvantage')) {
+    if (name.includes('executive'))           return 'https://www.citi.com/credit-cards/citi-aadvantage-executive-world-elite-credit-card';
+    if (name.includes('platinum'))            return 'https://www.citi.com/credit-cards/citi-aadvantage-platinum-select';
+    return 'https://www.citi.com/credit-cards/airline-credit-cards';
+  }
+  if (bank.includes('citi'))                  return 'https://www.citi.com/credit-cards/compare/view-all-credit-cards';
+
+  // Wells Fargo
+  if (name.includes('autograph journey'))     return 'https://creditcards.wellsfargo.com/autograph-journey-visa-credit-card/';
+  if (name.includes('autograph') && bank.includes('wells')) return 'https://creditcards.wellsfargo.com/autograph-visa-credit-card/';
+  if (name.includes('active cash'))           return 'https://creditcards.wellsfargo.com/active-cash-credit-card/';
+  if (bank.includes('wells fargo') || bank.includes('wells')) return 'https://creditcards.wellsfargo.com';
+
+  // Barclays
+  if (name.includes('aviator') || name.includes('aadvantage aviator')) return 'https://cards.barclaycardus.com/banking/cards/aadvantage-aviator-red-world-elite-mastercard/';
+  if (name.includes('jetblue') && name.includes('plus')) return 'https://cards.barclaycardus.com/banking/cards/jetblue-plus-card/';
+  if (name.includes('jetblue') && bank.includes('barclays')) return 'https://cards.barclaycardus.com/banking/cards/jetblue-card/';
+  if (name.includes('hawaiian') && bank.includes('barclays')) return 'https://cards.barclaycardus.com/banking/cards/hawaiian-airlines-world-elite-mastercard/';
+  if (bank.includes('barclays'))              return 'https://cards.barclaycardus.com';
+
+  // Bank of America
+  if (name.includes('premium rewards') && name.includes('elite')) return 'https://www.bankofamerica.com/credit-cards/products/premium-rewards-elite-credit-card/';
+  if (name.includes('premium rewards'))       return 'https://www.bankofamerica.com/credit-cards/products/premium-rewards-credit-card/';
+  if (name.includes('alaska') && name.includes('business')) return 'https://www.bankofamerica.com/credit-cards/products/alaska-airlines-business-visa-credit-card/';
+  if (name.includes('alaska'))                return 'https://www.bankofamerica.com/credit-cards/products/alaska-airlines-visa-signature-credit-card/';
+  if (bank.includes('bank of america') || bank.includes('bofa')) return 'https://www.bankofamerica.com/credit-cards/';
+
+  // Discover
+  if (name.includes('discover it') && name.includes('cash')) return 'https://www.discover.com/credit-cards/cash-back/it-card.html';
+  if (name.includes('discover it') && name.includes('miles')) return 'https://www.discover.com/credit-cards/travel/it-miles-card.html';
+  if (bank.includes('discover'))              return 'https://www.discover.com/credit-cards/';
+
+  // US Bank
+  if (name.includes('altitude reserve'))      return 'https://www.usbank.com/credit-cards/altitude-reserve-visa-infinite-credit-card.html';
+  if (name.includes('altitude connect'))      return 'https://www.usbank.com/credit-cards/altitude-connect-visa-signature-credit-card.html';
+  if (name.includes('altitude go'))           return 'https://www.usbank.com/credit-cards/altitude-go-visa-signature-credit-card.html';
+  if (bank.includes('us bank') || bank.includes('usbank')) return 'https://www.usbank.com/credit-cards/';
+
+  // Generic fallback — Google the card name
+  return 'https://www.google.com/search?q=' + encodeURIComponent((card.bank || '') + ' ' + (card.name || '') + ' credit card apply');
 }
 var CARDS = [];
 var dataInfo = { updatedAt: null, liveCount: 0, cardCount: 0, status: 'loading' };
