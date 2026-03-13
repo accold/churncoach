@@ -781,9 +781,95 @@ function runEngine() {
   html += '<div class="money-box">'
     + '<div style="font-family:Syne,sans-serif;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:14px;">🔄 After Year 1 — Keep the Machine Running</div>'
     + '<div class="cycle-step" style="border-left:3px solid var(--accent)"><strong style="color:var(--text)">Ongoing spend rewards.</strong> At $' + monthlySpend.toLocaleString() + '/mo you will earn roughly <strong style="color:var(--accent)">$' + annualEarn.toLocaleString() + '/year</strong> just from normal spending on keeper cards.</div>'
-    + '<div class="cycle-step" style="border-left:3px solid var(--accent2)"><strong style="color:var(--text)">Slots reopen.</strong> Cards age off the 5/24 clock exactly 24 months after opening. As they drop off, you can cycle through high-value cards again.</div>'
+    + '<div class="cycle-step" style="border-left:3px solid var(--accent2)"><strong style="color:var(--text)">Slots reopen.</strong> Cards age off the 5/24 clock exactly 24 months after opening. You do not close them — they stay open and keep building your credit history. They just stop counting against the 5/24 limit, freeing up a slot to apply for a new Chase card.</div>'
     + '<div class="cycle-step" style="border-left:3px solid var(--good)"><strong style="color:var(--text)">Steady state.</strong> 2–3 new cards per year at your spend level = roughly <strong style="color:var(--accent)">$' + (perCard * 2).toLocaleString() + '–$' + (perCard * 3).toLocaleString() + '/year</strong> in bonuses on autopilot.</div>'
     + '</div>';
+
+  // ── YEAR 2+ ROADMAP ──
+  html += '<div class="sec-head" style="margin-top:24px">📅 What To Do After Year 1</div>';
+  html += '<div class="money-box">'
+    + '<div style="font-family:Syne,sans-serif;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;">Your Card-by-Card Repeat Strategy</div>';
+
+  top5.forEach(function(c, i) {
+    var repeatRule = '';
+    var repeatColor = 'var(--muted)';
+
+    if (c.bank === 'Chase' && (c.id === 'csp' || c.id === 'csr')) {
+      repeatRule = 'Eligible for the bonus again after 48 months from when you last received it. At month 49+ you can apply for the other Sapphire (Preferred or Reserve) or the same one again.';
+      repeatColor = 'var(--accent)';
+    } else if (c.bank === 'Chase' && c.isBiz) {
+      repeatRule = 'Chase Ink cards have no stated repeat limit. Many people cycle through Ink Preferred, Ink Unlimited, and Ink Cash repeatedly. Wait at least 6 months between Ink applications to avoid scrutiny.';
+      repeatColor = 'var(--accent)';
+    } else if (c.bank === 'Chase') {
+      repeatRule = 'Chase personal cards can be reapplied for after 24 months, as long as you are under 5/24 and have not held the card recently.';
+      repeatColor = 'var(--accent)';
+    } else if (c.bank === 'Amex') {
+      repeatRule = 'Amex has a once-per-lifetime bonus rule on most cards. You likely cannot get this bonus again. Instead, look at other Amex cards you have not held before.';
+      repeatColor = 'var(--warn)';
+    } else if (c.bank === 'Citi') {
+      repeatRule = 'Citi enforces a 48-month rule — you can earn this bonus again 48 months after your last bonus on this card.';
+      repeatColor = 'var(--accent)';
+    } else if (c.bank === 'Capital One') {
+      repeatRule = 'Capital One generally requires 24 months between bonuses on the same card. You can reapply once that window passes.';
+      repeatColor = 'var(--accent)';
+    } else if (c.bank === 'Barclays') {
+      repeatRule = 'Barclays has no clearly published repeat rules. Most data points suggest waiting 24 months. Some people have gotten the bonus again sooner.';
+      repeatColor = 'var(--accent)';
+    } else if (c.bank === 'Wells Fargo') {
+      repeatRule = 'Wells Fargo requires 12 months between applications for the same card. One of the more forgiving repeat timelines.';
+      repeatColor = 'var(--accent)';
+    } else {
+      repeatRule = 'Check the issuer terms before reapplying. Generally safe to attempt after 24 months.';
+    }
+
+    // When does this card open a 5/24 slot?
+    var slotNote = c.rule524
+      ? 'This card used one of your 5/24 slots. That slot reopens 24 months after your approval date — keep the card open, it just stops counting.'
+      : 'This card does not use a 5/24 slot, so it never blocked you from Chase applications.';
+
+    html += '<div class="ongoing-row">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">'
+      + '<div style="font-weight:600;color:var(--text);font-size:.78rem">' + c.bank + ' ' + c.name + '</div>'
+      + '<span class="badge ' + (c.rule524 ? 'by' : 'bg') + '">' + (c.rule524 ? '5/24 slot' : 'no slot used') + '</span>'
+      + '</div>'
+      + '<div style="font-size:.72rem;color:' + repeatColor + ';line-height:1.65;margin-bottom:3px">🔁 ' + repeatRule + '</div>'
+      + '<div style="font-size:.7rem;color:var(--muted);line-height:1.6">📌 ' + slotNote + '</div>'
+      + '</div>';
+  });
+
+  html += '</div>';
+
+  // What to apply for next
+  var chaseCardsInRoadmap = top5.filter(function(c) { return c.bank === 'Chase'; });
+  var allChaseCards = (CARDS.length > 0 ? CARDS : FALLBACK_CARDS).filter(function(c) { return c.bank === 'Chase'; });
+  var remainingChase = allChaseCards.filter(function(c) {
+    return top5.indexOf(top5.find(function(t) { return t.id === c.id; })) === -1;
+  });
+
+  var amexCardsNotInRoadmap = (CARDS.length > 0 ? CARDS : FALLBACK_CARDS).filter(function(c) {
+    return c.bank === 'Amex' && !top5.find(function(t) { return t.id === c.id; });
+  });
+
+  if (remainingChase.length > 0 || amexCardsNotInRoadmap.length > 0) {
+    html += '<div class="money-box" style="margin-top:14px;">'
+      + '<div style="font-family:Syne,sans-serif;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent2);margin-bottom:14px;">⏭️ What To Target Next (Year 2+)</div>'
+      + '<div style="font-size:.75rem;color:var(--muted);line-height:1.8;">';
+
+    if (remainingChase.length > 0) {
+      html += '<strong style="color:var(--text)">Chase cards not yet in your roadmap:</strong> ';
+      html += remainingChase.map(function(c) { return c.name + ' (' + c.bonusPts + ')'; }).join(', ') + '.<br>';
+      html += 'Once your 5/24 slots reopen at 24 months, these become available.<br><br>';
+    }
+
+    if (amexCardsNotInRoadmap.length > 0) {
+      html += '<strong style="color:var(--text)">Amex cards not yet in your roadmap:</strong> ';
+      html += amexCardsNotInRoadmap.map(function(c) { return c.name + ' (' + c.bonusPts + ')'; }).join(', ') + '.<br>';
+      html += 'Since Amex does not count toward 5/24, you can pick these up any time — even while you are waiting on 5/24 slots to reopen.';
+    }
+
+    html += '</div></div>';
+  }
+
   showResult(html);
 }
 
