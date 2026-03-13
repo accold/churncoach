@@ -270,28 +270,9 @@ async function scrapeFrequentMiler() {
   return scraped;
 }
 
-// ─────────────────────────────────────────────
-// FALLBACK DATA — used when scraping fails
-// Update these manually when offers change
-// ─────────────────────────────────────────────
-const FALLBACK_OFFERS = {
-  'chase-sapphire-preferred':       { bonus: 750, bonusPts: '75,000 pts', minSpend: 5000, days: 90 },
-  'chase-sapphire-reserve':         { bonus: 750, bonusPts: '60,000 pts', minSpend: 4000, days: 90 },
-  'chase-ink-business-preferred':   { bonus: 1000, bonusPts: '100,000 pts', minSpend: 8000, days: 90 },
-  'chase-ink-business-unlimited':   { bonus: 750, bonusPts: '$750 cash', minSpend: 6000, days: 90 },
-  'chase-ink-business-cash':        { bonus: 750, bonusPts: '$750 cash', minSpend: 6000, days: 90 },
-  'chase-freedom-flex':             { bonus: 200, bonusPts: '$200 cash', minSpend: 500, days: 90 },
-  'amex-platinum':                  { bonus: 1500, bonusPts: '150,000 pts', minSpend: 8000, days: 180 },
-  'amex-gold':                      { bonus: 600, bonusPts: '60,000 pts', minSpend: 6000, days: 180 },
-  'amex-business-platinum':         { bonus: 1500, bonusPts: '150,000 pts', minSpend: 20000, days: 180 },
-  'amex-blue-business-plus':        { bonus: 250, bonusPts: '15,000 pts', minSpend: 3000, days: 90 },
-  'capital-one-venture-x':          { bonus: 750, bonusPts: '75,000 miles', minSpend: 4000, days: 90 },
-  'capital-one-venture':            { bonus: 750, bonusPts: '75,000 miles', minSpend: 4000, days: 90 },
-  'citi-strata-premier':            { bonus: 600, bonusPts: '75,000 pts', minSpend: 4000, days: 90 },
-  'citi-double-cash':               { bonus: 200, bonusPts: '$200 cash', minSpend: 1500, days: 90 },
-  'wells-fargo-autograph-journey':  { bonus: 400, bonusPts: '60,000 pts', minSpend: 4000, days: 90 },
-  'barclays-aadvantage-aviator-red':{ bonus: 600, bonusPts: '60,000 miles', minSpend: 0, days: 90 },
-};
+// No fallback data — if scraping fails, cards are excluded rather than shown with stale numbers.
+// This prevents the app from ever displaying incorrect bonus amounts.
+const FALLBACK_OFFERS = {};
 
 // ─────────────────────────────────────────────
 // MERGE — combine scraped data with static metadata
@@ -300,14 +281,18 @@ function mergeCardData(docScraped, fmScraped) {
   const cards = [];
 
   for (const [key, meta] of Object.entries(CARD_META)) {
-    // Priority: DoC > FrequentMiler > fallback
+    // Only include cards where we have live scraped data — never show stale hardcoded numbers
     const liveData = docScraped[key] || fmScraped[key] || null;
-    const fallback = FALLBACK_OFFERS[key];
 
-    const bonus = liveData?.bonus || fallback.bonus;
-    const bonusPts = liveData?.bonusPts || fallback.bonusPts;
-    const minSpend = liveData?.minSpend || fallback.minSpend;
-    const days = liveData?.days || fallback.days;
+    if (!liveData) {
+      console.log(`  Skipping ${meta.name} — no live data found`);
+      continue;
+    }
+
+    const bonus = liveData.bonus;
+    const bonusPts = liveData.bonusPts;
+    const minSpend = liveData.minSpend || meta.typicalMinSpend || 3000;
+    const days = liveData.days || 90;
 
     cards.push({
       ...meta,
@@ -315,9 +300,9 @@ function mergeCardData(docScraped, fmScraped) {
       bonusPts,
       minSpend,
       days,
-      netVal: bonus - meta.fee + meta.credits,
-      dataSource: liveData?.source || 'fallback',
-      lastUpdated: liveData?.scrapedAt || new Date().toISOString(),
+      netVal: bonus - meta.fee + (meta.credits || 0),
+      dataSource: liveData.source,
+      lastUpdated: liveData.scrapedAt,
     });
   }
 
@@ -347,7 +332,6 @@ async function main() {
     cards,
   };
 
-  mkdirSync(resolve(__dirname, '../public'), { recursive: true });
   writeFileSync(OUTPUT, JSON.stringify(output, null, 2));
 
   console.log(`\nDone! ${output.liveCount}/${output.cardCount} cards have live data.`);
