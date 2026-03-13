@@ -555,6 +555,84 @@ function runEngine() {
     <strong>Month 3:</strong> Once bonus posts, apply for #2.<br>
     <strong>Month 6:</strong> Apply for #3. Evaluate Year 1 fees coming up.<br>
     <strong>Hard Rule:</strong> Never more than 2 cards in 30 days.
+
+  // ── HOW YOU'LL MAKE MONEY ──
+  const totalBonuses = top5.reduce((s,c) => s + c.bonus, 0);
+  const totalFees2 = top5.reduce((s,c) => s + c.fee, 0);
+  const totalCredits2 = top5.reduce((s,c) => s + (c.credits||0), 0);
+  const totalNet = totalBonuses - totalFees2 + totalCredits2;
+  const totalMinSpend2 = top5.reduce((s,c) => s + c.minSpend, 0);
+  const monthsToComplete = Math.ceil(totalMinSpend2 / monthlySpend);
+  const isTravel = goals.includes('flights')||goals.includes('hotels')||goals.includes('intl')||goals.includes('biz')||goals.includes('lounge');
+  const pointsCards2 = top5.filter(c => c.hasTransfers);
+  const totalPointsBonuses = pointsCards2.reduce((s,c) => s + c.bonus, 0);
+  const travelMult = goals.includes('biz') ? 2.0 : (goals.includes('lounge')||goals.includes('intl')) ? 1.8 : 1.5;
+  const pointsRealValue = Math.round(totalPointsBonuses * travelMult);
+  const annualEarn = Math.round(monthlySpend * 12 * (cats.length > 0 ? 2.5 : 1.5) * 0.01);
+
+  html += '<div class="sec-head" style="margin-top:28px">💰 How You\'ll Make Money</div>';
+
+  // Year 1 table
+  html += '<div style="background:var(--card);border:1px solid rgba(0,255,136,.2);border-radius:14px;padding:24px;margin-bottom:16px;">';
+  html += '<div style="font-family:Syne,sans-serif;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;">Year 1 Breakdown — Your Specific Cards</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px;">';
+  html += '<div style="background:var(--surface);border-radius:10px;padding:16px;text-align:center;"><div style="font-family:Syne,sans-serif;font-size:1.9rem;font-weight:800;color:var(--accent)">$' + totalBonuses.toLocaleString() + '</div><div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;margin-top:4px">Welcome Bonuses</div><div style="font-size:.68rem;color:var(--muted);margin-top:3px">' + top5.length + ' cards · ~' + monthsToComplete + ' months to earn</div></div>';
+  html += '<div style="background:var(--surface);border-radius:10px;padding:16px;text-align:center;"><div style="font-family:Syne,sans-serif;font-size:1.9rem;font-weight:800;color:var(--danger)">-$' + totalFees2.toLocaleString() + '</div><div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;margin-top:4px">Annual Fees</div><div style="font-size:.68rem;color:var(--muted);margin-top:3px">+$' + totalCredits2.toLocaleString() + ' in credits offset this</div></div>';
+  html += '<div style="background:var(--surface);border:1px solid rgba(0,255,136,.15);border-radius:10px;padding:16px;text-align:center;"><div style="font-family:Syne,sans-serif;font-size:1.9rem;font-weight:800;color:var(--accent)">$' + totalNet.toLocaleString() + '</div><div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;margin-top:4px">Net Profit Year 1</div><div style="font-size:.68rem;color:var(--accent);margin-top:3px">cash equivalent</div></div>';
+  html += '</div>';
+  top5.forEach(c => {
+    const net = c.bonus - c.fee + (c.credits||0);
+    const mo = c.minSpend === 0 ? '1 purchase' : '$' + c.minSpend.toLocaleString() + ' spend · ~' + Math.ceil(c.minSpend/monthlySpend) + 'mo';
+    html += '<div style="display:flex;align-items:center;gap:14px;padding:10px 0;border-top:1px solid var(--border);"><div style="flex:1;font-size:.78rem">' + c.bank + ' ' + c.name + '</div><div style="font-size:.72rem;color:var(--muted)">' + mo + '</div><div style="font-size:.85rem;font-family:Syne,sans-serif;font-weight:700;color:' + (net>0?'var(--accent)':'var(--danger)') + ';min-width:80px;text-align:right">' + (net>0?'+':'') + '$' + net.toLocaleString() + '</div></div>';
+  });
+  html += '</div>';
+
+  // Travel value section
+  if (isTravel && pointsCards2.length > 0) {
+    html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:16px;">';
+    html += '<div style="font-family:Syne,sans-serif;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent2);margin-bottom:14px;">✈️ What Your Points Are Actually Worth</div>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">';
+    html += '<div style="background:var(--surface);border-radius:9px;padding:14px;"><div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;margin-bottom:6px">Cash Out</div><div style="font-family:Syne,sans-serif;font-size:1.4rem;font-weight:700;">$' + totalPointsBonuses.toLocaleString() + '</div><div style="font-size:.7rem;color:var(--muted);margin-top:3px">1 cent per point — minimum value</div></div>';
+    html += '<div style="background:var(--surface);border:1px solid rgba(162,89,255,.2);border-radius:9px;padding:14px;"><div style="font-size:.62rem;color:var(--accent2);text-transform:uppercase;margin-bottom:6px">Travel Transfers</div><div style="font-family:Syne,sans-serif;font-size:1.4rem;font-weight:700;color:var(--accent2)">$' + pointsRealValue.toLocaleString() + '</div><div style="font-size:.7rem;color:var(--muted);margin-top:3px">~' + travelMult + 'cpp via airline/hotel transfers</div></div>';
+    html += '</div>';
+    let travelTips = '<div style="font-size:.75rem;color:var(--muted);line-height:1.8;padding:12px;background:var(--surface);border-radius:8px;">';
+    if (goals.includes('biz')) travelTips += '💺 <strong style="color:var(--text)">Business class:</strong> Transfer Chase/Amex to Air France, ANA, or United. Your bonuses can book $3,000–$5,000 business class seats.<br>';
+    if (goals.includes('flights')) travelTips += '✈️ <strong style="color:var(--text)">Flights:</strong> Transfer to Southwest, United, or British Airways. 15,000–25,000 points = domestic flights worth $200–$400.<br>';
+    if (goals.includes('hotels')) travelTips += '🏨 <strong style="color:var(--text)">Hotels:</strong> Chase points transfer to Hyatt 1:1 — best value anywhere. 25,000 points = $300–$600/night rooms.<br>';
+    if (goals.includes('lounge')) travelTips += '🛋️ <strong style="color:var(--text)">Lounges:</strong> Free access worth $30–$60/visit. 10 flights/year = $300–$600 saved automatically.';
+    travelTips += '</div>';
+    html += travelTips + '</div>';
+  }
+
+  // Ongoing value
+  html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:16px;">';
+  html += '<div style="font-family:Syne,sans-serif;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:14px;">📈 Ongoing Annual Value After Year 1</div>';
+  top5.forEach(c => {
+    const keeperVal = (c.credits||0) - c.fee;
+    const matchedCats = (c.cats||[]).filter(cc => cats.includes(cc));
+    html += '<div style="padding:10px 0;border-top:1px solid var(--border);font-size:.75rem;line-height:1.7;">';
+    html += '<div style="font-weight:600;color:var(--text);margin-bottom:2px">' + c.bank + ' ' + c.name + '</div>';
+    if (matchedCats.length > 0) html += '<div style="color:var(--muted)">Earns bonus points on: ' + matchedCats.join(', ') + '</div>';
+    else html += '<div style="color:var(--muted)">Earns 1–2x on all purchases</div>';
+    if (keeperVal > 0) html += '<div style="color:var(--accent)">Credits exceed fee by $' + keeperVal + ' — free to keep every year</div>';
+    else if (c.fee > 0) html += '<div style="color:var(--warn)">At 11 months: keep, downgrade, or cancel before $' + c.fee + ' fee hits again</div>';
+    else html += '<div style="color:var(--accent)">No annual fee — keep forever</div>';
+    html += '</div>';
+  });
+  html += '<div style="margin-top:14px;padding:12px;background:var(--surface);border-radius:8px;font-size:.75rem;color:var(--muted);line-height:1.7;">At $' + monthlySpend.toLocaleString() + '/mo spend, expect roughly <strong style="color:var(--accent)">$' + annualEarn.toLocaleString() + '/year</strong> in ongoing rewards from normal spending on keeper cards.</div>';
+  html += '</div>';
+
+  // Long game
+  const perCard = Math.round(totalNet / top5.length);
+  html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;">';
+  html += '<div style="font-family:Syne,sans-serif;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:14px;">🔄 The Long Game — How to Keep Making Money Every Year</div>';
+  html += '<div style="display:flex;flex-direction:column;gap:10px;">';
+  html += '<div style="padding:12px;background:var(--surface);border-radius:8px;border-left:3px solid var(--accent);font-size:.78rem;line-height:1.75;color:var(--muted);"><strong style="color:var(--text)">Hit the bonus, bank the rewards.</strong> Spend exactly what you need for the minimum — the bonus is the money maker, not the ongoing earn rate.</div>';
+  html += '<div style="padding:12px;background:var(--surface);border-radius:8px;border-left:3px solid var(--accent2);font-size:.78rem;line-height:1.75;color:var(--muted);"><strong style="color:var(--text)">Decide at 11 months.</strong> Before each annual fee hits: do credits + rewards exceed the fee? Keep it. If not, downgrade to the no-fee version. Never close cards — that hurts your score.</div>';
+  html += '<div style="padding:12px;background:var(--surface);border-radius:8px;border-left:3px solid var(--warn);font-size:.78rem;line-height:1.75;color:var(--muted);"><strong style="color:var(--text)">Watch your 5/24 slots open up.</strong> Cards age off 5/24 exactly 24 months after opening. As they drop off, Chase slots reopen and you repeat the highest-value cards.</div>';
+  html += '<div style="padding:12px;background:var(--surface);border-radius:8px;border-left:3px solid var(--good);font-size:.78rem;line-height:1.75;color:var(--muted);"><strong style="color:var(--text)">Steady state: 2–3 cards/year.</strong> At your spend level that\'s roughly <strong style="color:var(--accent)">$' + (perCard*2).toLocaleString() + '–$' + (perCard*3).toLocaleString() + '/year</strong> in bonuses on autopilot once you\'re in the rhythm.</div>';
+  html += '</div></div>';
+
   </div></div></div>`;
 
   showResult(html);
