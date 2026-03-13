@@ -1,0 +1,35 @@
+name: Scrape Card Offers
+
+on:
+  schedule:
+    - cron: '0 8 * * *'   # runs every day at 8am UTC
+  workflow_dispatch:        # allows manual trigger from GitHub UI
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install cheerio node-fetch
+        working-directory: scripts
+
+      - name: Run scraper
+        run: node scraper.js
+        working-directory: scripts
+
+      - name: Commit updated card data
+        run: |
+          git config user.name "ChurnCoach Bot"
+          git config user.email "bot@churncoach"
+          git add public/cards.json
+          git diff --staged --quiet || git commit -m "chore: update card offers $(date -u +%Y-%m-%d)"
+          git push
