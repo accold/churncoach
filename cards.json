@@ -1,35 +1,8 @@
 {
-  "updatedAt": "2026-03-13T14:31:27.531Z",
-  "cardCount": 16,
+  "updatedAt": "2026-03-13T17:28:49.878Z",
+  "cardCount": 10,
   "liveCount": 10,
   "cards": [
-    {
-      "id": "csp",
-      "bank": "Chase",
-      "name": "Sapphire Preferred",
-      "type": "travel",
-      "fee": 95,
-      "credits": 50,
-      "cats": [
-        "travel",
-        "dining"
-      ],
-      "hasTransfers": true,
-      "rule524": true,
-      "minScore": 700,
-      "roi": 7.4,
-      "isBiz": false,
-      "easyMin": false,
-      "why": "Best starter travel card. $50 hotel credit offsets fee. Points transfer to 14 airlines/hotels. Gateway to the Chase ecosystem.",
-      "keeper": true,
-      "bonus": 750,
-      "bonusPts": "75,000 pts",
-      "minSpend": 5000,
-      "days": 90,
-      "netVal": 705,
-      "dataSource": "fallback",
-      "lastUpdated": "2026-03-13T14:31:27.531Z"
-    },
     {
       "id": "csr",
       "bank": "Chase",
@@ -51,11 +24,11 @@
       "keeper": true,
       "bonus": 1250,
       "bonusPts": "125,000 pts",
-      "minSpend": 4000,
+      "minSpend": 3000,
       "days": 90,
       "netVal": 1000,
       "dataSource": "doctorofcredit",
-      "lastUpdated": "2026-03-13T14:31:27.263Z"
+      "lastUpdated": "2026-03-13T17:28:49.613Z"
     },
     {
       "id": "ibp",
@@ -79,93 +52,11 @@
       "keeper": true,
       "bonus": 1000,
       "bonusPts": "100,000 pts",
-      "minSpend": 8000,
+      "minSpend": 3000,
       "days": 90,
       "netVal": 905,
       "dataSource": "doctorofcredit",
-      "lastUpdated": "2026-03-13T14:31:27.266Z"
-    },
-    {
-      "id": "ibu",
-      "bank": "Chase",
-      "name": "Ink Business Unlimited",
-      "type": "business",
-      "fee": 0,
-      "credits": 0,
-      "cats": [
-        "online",
-        "office"
-      ],
-      "hasTransfers": false,
-      "rule524": false,
-      "minScore": 680,
-      "roi": 9.2,
-      "isBiz": true,
-      "easyMin": false,
-      "why": "No fee ever. 1.5% on everything. Does NOT count toward 5/24.",
-      "keeper": true,
-      "bonus": 750,
-      "bonusPts": "$750 cash",
-      "minSpend": 6000,
-      "days": 90,
-      "netVal": 750,
-      "dataSource": "fallback",
-      "lastUpdated": "2026-03-13T14:31:27.531Z"
-    },
-    {
-      "id": "ibc",
-      "bank": "Chase",
-      "name": "Ink Business Cash",
-      "type": "business",
-      "fee": 0,
-      "credits": 0,
-      "cats": [
-        "office",
-        "online"
-      ],
-      "hasTransfers": false,
-      "rule524": false,
-      "minScore": 680,
-      "roi": 9,
-      "isBiz": true,
-      "easyMin": false,
-      "why": "5% on office supplies, internet, cable, phone. No fee. Does NOT count toward 5/24.",
-      "keeper": true,
-      "bonus": 750,
-      "bonusPts": "$750 cash",
-      "minSpend": 6000,
-      "days": 90,
-      "netVal": 750,
-      "dataSource": "fallback",
-      "lastUpdated": "2026-03-13T14:31:27.531Z"
-    },
-    {
-      "id": "ff",
-      "bank": "Chase",
-      "name": "Freedom Flex",
-      "type": "cashback",
-      "fee": 0,
-      "credits": 0,
-      "cats": [
-        "grocery",
-        "dining",
-        "online"
-      ],
-      "hasTransfers": false,
-      "rule524": true,
-      "minScore": 670,
-      "roi": 8.5,
-      "isBiz": false,
-      "easyMin": true,
-      "why": "Easiest bonus to hit. No annual fee. 5% on rotating categories. Stack with Sapphire to convert cash to travel points.",
-      "keeper": true,
-      "bonus": 200,
-      "bonusPts": "$200 cash",
-      "minSpend": 500,
-      "days": 90,
-      "netVal": 200,
-      "dataSource": "fallback",
-      "lastUpdated": "2026-03-13T14:31:27.531Z"
+      "lastUpdated": "2026-03-13T17:28:49.615Z"
     },
     {
       "id": "amexplat",
@@ -187,11 +78,11 @@
       "keeper": false,
       "bonus": 1750,
       "bonusPts": "175,000 pts",
-      "minSpend": 8000,
+      "minSpend": 3000,
       "days": 90,
       "netVal": 1655,
       "dataSource": "doctorofcredit",
-      "lastUpdated": "2026-03-13T14:31:27.263Z"
+      "lastUpdated": "2026-03-13T17:28:49.613Z"
     },
     {
       "id": "amexgold",
@@ -214,11 +105,11 @@
       "keeper": true,
       "bonus": 350,
       "bonusPts": "35,000 pts",
-      "minSpend": 6000,
+      "minSpend": 3000,
       "days": 90,
       "netVal": 340,
       "dataSource": "doctorofcredit",
-      "lastUpdated": "2026-03-13T14:31:27.266Z"
+      "lastUpdated": "2026-03-13T17:28:49.616Z"
     },
     {
       "id": "amexbizplat",
@@ -241,11 +132,11 @@
       "keeper": false,
       "bonus": 2500,
       "bonusPts": "250,000 pts",
-      "minSpend": 20000,
+      "minSpend": 3000,
       "days": 90,
       "netVal": 2405,
       "dataSource": "doctorofcredit",
-      "lastUpdated": "2026-03-13T14:31:27.266Z"
+      "lastUpdated": "2026-03-13T17:28:49.616Z"
     },
     {
       "id": "bbp",
@@ -271,7 +162,7 @@
       "days": 90,
       "netVal": 750,
       "dataSource": "doctorofcredit",
-      "lastUpdated": "2026-03-13T14:31:27.266Z"
+      "lastUpdated": "2026-03-13T17:28:49.616Z"
     },
     {
       "id": "venturex",
@@ -293,11 +184,11 @@
       "keeper": true,
       "bonus": 2000,
       "bonusPts": "200,000 pts",
-      "minSpend": 4000,
+      "minSpend": 3000,
       "days": 90,
       "netVal": 1905,
       "dataSource": "doctorofcredit",
-      "lastUpdated": "2026-03-13T14:31:27.266Z"
+      "lastUpdated": "2026-03-13T17:28:49.616Z"
     },
     {
       "id": "venture",
@@ -319,40 +210,11 @@
       "keeper": true,
       "bonus": 750,
       "bonusPts": "75,000 pts",
-      "minSpend": 4000,
+      "minSpend": 3000,
       "days": 90,
       "netVal": 655,
       "dataSource": "doctorofcredit",
-      "lastUpdated": "2026-03-13T14:31:27.264Z"
-    },
-    {
-      "id": "strata",
-      "bank": "Citi",
-      "name": "Strata Premier",
-      "type": "travel",
-      "fee": 95,
-      "credits": 100,
-      "cats": [
-        "travel",
-        "dining",
-        "grocery",
-        "gas"
-      ],
-      "hasTransfers": true,
-      "rule524": false,
-      "minScore": 700,
-      "roi": 7.9,
-      "isBiz": false,
-      "easyMin": false,
-      "why": "Citi uses 48-month rule. Points transfer to Turkish Airlines (business class sweet spot). Good when over 5/24.",
-      "keeper": true,
-      "bonus": 600,
-      "bonusPts": "75,000 pts",
-      "minSpend": 4000,
-      "days": 90,
-      "netVal": 605,
-      "dataSource": "fallback",
-      "lastUpdated": "2026-03-13T14:31:27.531Z"
+      "lastUpdated": "2026-03-13T17:28:49.614Z"
     },
     {
       "id": "doubecash",
@@ -374,11 +236,11 @@
       "keeper": true,
       "bonus": 100,
       "bonusPts": "$100",
-      "minSpend": 1500,
+      "minSpend": 3000,
       "days": 90,
       "netVal": 100,
       "dataSource": "doctorofcredit",
-      "lastUpdated": "2026-03-13T14:31:27.265Z"
+      "lastUpdated": "2026-03-13T17:28:49.615Z"
     },
     {
       "id": "wfaj",
@@ -402,37 +264,11 @@
       "keeper": true,
       "bonus": 1000,
       "bonusPts": "100,000 pts",
-      "minSpend": 4000,
+      "minSpend": 3000,
       "days": 90,
       "netVal": 955,
       "dataSource": "doctorofcredit",
-      "lastUpdated": "2026-03-13T14:31:27.266Z"
-    },
-    {
-      "id": "barcavoy",
-      "bank": "Barclays",
-      "name": "AAdvantage Aviator Red",
-      "type": "travel",
-      "fee": 99,
-      "credits": 0,
-      "cats": [
-        "travel"
-      ],
-      "hasTransfers": false,
-      "rule524": false,
-      "minScore": 680,
-      "roi": 7.8,
-      "isBiz": false,
-      "easyMin": true,
-      "why": "Unique: bonus triggers after FIRST purchase only — no minimum spend. Barclays is independent of all major bank rules.",
-      "keeper": false,
-      "bonus": 600,
-      "bonusPts": "60,000 miles",
-      "minSpend": 0,
-      "days": 90,
-      "netVal": 501,
-      "dataSource": "fallback",
-      "lastUpdated": "2026-03-13T14:31:27.531Z"
+      "lastUpdated": "2026-03-13T17:28:49.616Z"
     }
   ]
 }
