@@ -414,36 +414,80 @@ function runEngine() {
     var score = 0;
     var eligible = true;
     var flags = [];
+
+    // ── HARD ELIGIBILITY ──
     if (creditScore < c.minScore) eligible = false;
     if (c.rule524 && cards524 >= 5) eligible = false;
     if (c.isBiz && !hasBiz) eligible = false;
     if (avoid.indexOf(c.bank) !== -1) eligible = false;
     if (c.bank === 'Capital One' && cap1Count >= 2) eligible = false;
-    score += c.roi * 5;
-    var monthlyNeeded = c.minSpend / (c.days / 30);
-    var spendRatio = c.minSpend === 0 ? 0 : monthlyNeeded / monthlySpend;
-    if (spendRatio > 1.4) { score -= 25; flags.push({ t:'warn', m:'⚠️ Spend req may be tight ($' + Math.round(monthlyNeeded) + '/mo needed)' }); }
-    else if (spendRatio < 0.6 || c.minSpend === 0) { score += 10; flags.push({ t:'good', m:'✅ Min spend easily achievable' }); }
-    if (c.rule524) {
-      var slotsLeft = 5 - cards524;
-      if (slotsLeft >= 3) { score += 15; flags.push({ t:'good', m:'✅ You have ' + slotsLeft + ' Chase slots remaining' }); }
-      if (slotsLeft === 2) score += 20;
-      if (slotsLeft === 1) { score += 35; flags.push({ t:'warn', m:'🚨 FINAL Chase slot — use wisely' }); }
-    }
-    if (!c.rule524 && cards524 >= 5) { score += 20; flags.push({ t:'good', m:'✅ Not blocked by 5/24' }); }
-    if (c.bank === 'Amex' && amexCount >= 3) { score -= 18; flags.push({ t:'warn', m:'⚠️ High Amex count — popup jail risk' }); }
-    if (c.bank === 'Capital One') { score -= 5; flags.push({ t:'warn', m:'⚠️ Cap1 pulls all 3 bureaus' }); }
-    if (goals.indexOf('flights') !== -1 && c.hasTransfers) score += 12;
-    if (goals.indexOf('cash') !== -1 && c.type === 'cashback') score += 15;
-    if (goals.indexOf('lounge') !== -1 && ['csr','amexplat','venturex'].indexOf(c.id) !== -1) { score += 14; flags.push({ t:'good', m:'✅ Includes lounge access' }); }
-    if (goals.indexOf('hotels') !== -1 && ['csr','venturex','amexplat'].indexOf(c.id) !== -1) score += 10;
-    if (goals.indexOf('biz') !== -1 && c.hasTransfers) score += 8;
-    if (goals.indexOf('intl') !== -1 && c.hasTransfers) score += 8;
+    if (c.bank === 'Amex' && amexCount >= 3) { eligible = false; } // popup jail = not worth it
+
+    // ── GOALS (primary driver — high weight) ──
+    var goalHits = 0;
+    if (goals.indexOf('cash') !== -1 && c.type === 'cashback') { score += 40; goalHits++; }
+    if (goals.indexOf('flights') !== -1 && c.hasTransfers) { score += 35; goalHits++; }
+    if (goals.indexOf('intl') !== -1 && c.hasTransfers) { score += 30; goalHits++; }
+    if (goals.indexOf('biz') !== -1 && c.hasTransfers) { score += 30; goalHits++; }
+    if (goals.indexOf('hotels') !== -1 && ['csr','venturex','amexplat'].indexOf(c.id) !== -1) { score += 28; goalHits++; flags.push({ t:'good', m:'✅ Great for hotel bookings' }); }
+    if (goals.indexOf('lounge') !== -1 && ['csr','amexplat','venturex'].indexOf(c.id) !== -1) { score += 32; goalHits++; flags.push({ t:'good', m:'✅ Includes lounge access' }); }
+    // penalize cards that don't match any goal
+    if (goals.length > 0 && goalHits === 0) score -= 20;
+
+    // ── SPENDING CATEGORIES (second biggest driver) ──
     var catHits = (c.cats || []).filter(function(cc) { return cats.indexOf(cc) !== -1; }).length;
-    score += catHits * 9;
-    if (catHits > 0) flags.push({ t:'good', m:'✅ Earns bonus on ' + catHits + ' of your top categories' });
-    if (c.fee === 0) score += 6;
-    if (c.minSpend === 0) { score += 10; flags.push({ t:'good', m:'✅ No minimum spend — just make one purchase' }); }
+    score += catHits * 20;
+    if (catHits >= 2) flags.push({ t:'good', m:'✅ Earns bonus on ' + catHits + ' of your top categories' });
+    else if (catHits === 1) flags.push({ t:'good', m:'✅ Earns bonus on one of your top categories' });
+    // penalize if user has categories selected and card matches none
+    if (cats.length > 0 && catHits === 0 && c.type !== 'cashback') score -= 15;
+
+    // ── SPEND FEASIBILITY (hard practical constraint) ──
+    var monthlyNeeded = c.minSpend === 0 ? 0 : c.minSpend / (c.days / 30);
+    var spendRatio = c.minSpend === 0 ? 0 : monthlyNeeded / monthlySpend;
+    if (c.minSpend === 0) { score += 15; flags.push({ t:'good', m:'✅ No minimum spend — just make one purchase' }); }
+    else if (spendRatio <= 0.5) { score += 12; flags.push({ t:'good', m:'✅ Min spend very easy at your level' }); }
+    else if (spendRatio <= 0.8) { score += 6; }
+    else if (spendRatio <= 1.1) { score += 0; } // neutral
+    else if (spendRatio <= 1.4) { score -= 20; flags.push({ t:'warn', m:'⚠️ Spend req is a stretch ($' + Math.round(monthlyNeeded) + '/mo needed)' }); }
+    else { score -= 40; flags.push({ t:'warn', m:'🚨 Spend req likely unachievable ($' + Math.round(monthlyNeeded) + '/mo needed)' }); }
+
+    // ── 5/24 STRATEGY ──
+    var slotsLeft = Math.max(0, 5 - cards524);
+    if (c.rule524) {
+      // Chase personal cards — prioritize when slots are scarce
+      if (slotsLeft >= 4) score += 10;
+      else if (slotsLeft === 3) score += 18;
+      else if (slotsLeft === 2) score += 28;
+      else if (slotsLeft === 1) { score += 45; flags.push({ t:'warn', m:'🚨 FINAL Chase slot — use wisely' }); }
+    } else {
+      // Non-5/24 cards become more valuable when over limit
+      if (cards524 >= 5) { score += 30; flags.push({ t:'good', m:'✅ Not blocked by 5/24 — rare find right now' }); }
+      else if (cards524 >= 4) { score += 15; flags.push({ t:'good', m:'✅ Does not use a Chase slot' }); }
+    }
+
+    // ── FEE SENSITIVITY based on spend level ──
+    // Low spenders should prefer no/low fee cards
+    if (monthlySpend <= 1000) {
+      if (c.fee === 0) score += 20;
+      else if (c.fee <= 95) score += 5;
+      else score -= 15; // high fee cards harder to justify at low spend
+    } else if (monthlySpend <= 2000) {
+      if (c.fee === 0) score += 10;
+      else if (c.fee >= 500) score -= 10;
+    } else {
+      // High spenders can justify premium cards via credits
+      var effectiveFee = c.fee - (c.credits || 0);
+      if (effectiveFee < 0) { score += 15; flags.push({ t:'good', m:'✅ Credits more than cover the annual fee' }); }
+      else if (effectiveFee < 100) score += 8;
+    }
+
+    // ── BUSINESS CARD BONUS ──
+    if (c.isBiz && hasBiz && !c.rule524) { score += 20; flags.push({ t:'good', m:'✅ Business card — does NOT count toward 5/24' }); }
+
+    // ── ROI as tiebreaker only (low weight) ──
+    score += c.roi * 2;
+
     var netVal = c.bonus - c.fee + (c.credits || 0);
     return Object.assign({}, c, { score: Math.max(0, Math.round(score)), eligible: eligible, flags: flags, netVal: netVal });
   });
@@ -454,23 +498,32 @@ function runEngine() {
     return;
   }
 
-  var top5 = eligible.slice(0, 5);
-  var totalPotential = top5.reduce(function(s,c) { return s + Math.max(0, c.netVal); }, 0);
   var slotsLeft = Math.max(0, 5 - cards524);
+
+  // Split eligible into 5/24-consuming and non-5/24 cards
+  var chase524Cards = eligible.filter(function(c) { return c.rule524; }).slice(0, slotsLeft);
+  var non524Cards = eligible.filter(function(c) { return !c.rule524; });
+  // Full roadmap: use all Chase slots, then all non-5/24 cards
+  var allRoadmap = chase524Cards.concat(non524Cards);
+  // For money math, use full roadmap (capped at 12 for sanity)
+  var top5 = allRoadmap.slice(0, 12);
+
+  var totalPotential = allRoadmap.reduce(function(s,c) { return s + Math.max(0, c.netVal); }, 0);
+
   document.getElementById('reportSub').textContent = dataInfo.status === 'live' ? 'Using live offer data · updated ' + (dataInfo.updatedAt ? dataInfo.updatedAt.toLocaleDateString() : '') : 'Using cached fallback data — verify offers before applying';
 
   var html = '<div class="score-row">'
     + '<div class="score-box"><div class="score-num">' + slotsLeft + '</div><div class="score-lbl">Chase Slots Left</div></div>'
-    + '<div class="score-box"><div class="score-num" style="color:' + (eligible.length > 8 ? 'var(--accent)' : 'var(--warn)') + '">' + eligible.length + '</div><div class="score-lbl">Eligible Cards</div></div>'
-    + '<div class="score-box"><div class="score-num">$' + totalPotential.toLocaleString() + '</div><div class="score-lbl">Top 5 Net Value</div></div>'
+    + '<div class="score-box"><div class="score-num" style="color:var(--accent)">' + allRoadmap.length + '</div><div class="score-lbl">Cards in Roadmap</div></div>'
+    + '<div class="score-box"><div class="score-num">$' + totalPotential.toLocaleString() + '</div><div class="score-lbl">Total Net Value</div></div>'
     + '<div class="score-box"><div class="score-num" style="color:var(--accent)">LOW</div><div class="score-lbl">Risk Level</div></div>'
     + '</div>';
 
   var warns = [];
-  if (cards524 >= 5) warns.push({ sev:'red', icon:'🚨', msg:'You are over Chase 5/24. Skip ALL Chase personal cards until applications age out.' });
-  if (cards524 === 4) warns.push({ sev:'red', icon:'🔥', msg:'ONE Chase slot left. Use it on the highest-value Chase personal card only.' });
-  if (cards524 <= 2) warns.push({ sev:'green', icon:'✅', msg:'You have ' + slotsLeft + ' Chase 5/24 slots. Prioritize Chase before other banks.' });
-  if (!hasBiz) warns.push({ sev:'purple', icon:'💡', msg:"Chase Ink business cards don't require an incorporated business. Freelancing, eBay selling, or any side income qualifies. They don't count toward 5/24 AND have the best bonuses." });
+  if (cards524 >= 5) warns.push({ sev:'red', icon:'🚨', msg:'You are over Chase 5/24. All Chase personal cards are blocked. Focus entirely on non-5/24 cards below.' });
+  if (cards524 === 4) warns.push({ sev:'red', icon:'🔥', msg:'ONE Chase slot left. Use it on the highest-value Chase card, then shift to non-5/24 cards.' });
+  if (cards524 <= 2) warns.push({ sev:'green', icon:'✅', msg:'You have ' + slotsLeft + ' Chase slots. Hit all Chase cards first — they have the best transfer partners.' });
+  if (!hasBiz) warns.push({ sev:'purple', icon:'💡', msg:"Chase Ink business cards don't require an incorporated business. Any side income qualifies. They don't count toward 5/24 AND have the best bonuses." });
 
   if (warns.length) {
     html += '<div class="sec-head">Key Alerts</div><div class="warn-list">';
@@ -478,31 +531,55 @@ function runEngine() {
     html += '</div>';
   }
 
-  var timings = ['Apply Now','Apply in 3 months','Apply in 6 months','Apply in 9 months','Apply in 12 months'];
-  html += '<div class="sec-head">Priority Queue</div><div class="steps">';
-  top5.forEach(function(c, i) {
-    var topFlag = c.flags[0];
-    var liveTag = c.dataSource === 'fallback' ? '<span style="font-size:.6rem;color:var(--warn)">⚠ fallback</span>' : '<span style="font-size:.6rem;color:var(--accent)">● live</span>';
-    html += '<div class="step"><div class="step-num">' + (i+1) + '</div><div>'
-      + '<div class="step-title">' + c.bank + ' ' + c.name + ' ' + liveTag + '</div>'
-      + '<div style="font-size:.72rem;color:var(--accent);margin:3px 0">' + c.bonusPts + ' · $' + c.minSpend.toLocaleString() + ' in ' + c.days + 'd · $' + c.fee + '/yr fee · ~$' + Math.max(0, c.netVal) + ' net</div>'
-      + '<div class="step-desc">' + c.why + '</div>'
-      + (topFlag ? '<div style="font-size:.72rem;margin-top:5px;color:' + (topFlag.t === 'good' ? 'var(--accent)' : 'var(--warn)') + '">' + topFlag.m + '</div>' : '')
-      + '<div style="margin-top:7px"><span class="badge by">' + timings[i] + '</span></div>'
-      + '</div></div>';
-  });
-  html += '</div>';
+  // Helper: timing label based on position
+  function timingLabel(i) {
+    if (i === 0) return 'Apply Now';
+    var mo = i * 3;
+    return 'Month ' + mo;
+  }
+
+  function renderSteps(cardList, startIndex) {
+    var out = '';
+    cardList.forEach(function(c, idx) {
+      var i = startIndex + idx;
+      var topFlag = c.flags[0];
+      var liveTag = c.dataSource === 'fallback' ? '<span style="font-size:.6rem;color:var(--warn)">⚠ fallback</span>' : '<span style="font-size:.6rem;color:var(--accent)">● live</span>';
+      out += '<div class="step"><div class="step-num">' + (i+1) + '</div><div>'
+        + '<div class="step-title">' + c.bank + ' ' + c.name + ' ' + liveTag + '</div>'
+        + '<div style="font-size:.72rem;color:var(--accent);margin:3px 0">' + c.bonusPts + ' · $' + c.minSpend.toLocaleString() + ' in ' + c.days + 'd · $' + c.fee + '/yr fee · ~$' + Math.max(0, c.netVal) + ' net</div>'
+        + '<div class="step-desc">' + c.why + '</div>'
+        + (topFlag ? '<div style="font-size:.72rem;margin-top:5px;color:' + (topFlag.t === 'good' ? 'var(--accent)' : 'var(--warn)') + '">' + topFlag.m + '</div>' : '')
+        + '<div style="margin-top:7px"><span class="badge by">' + timingLabel(i) + '</span></div>'
+        + '</div></div>';
+    });
+    return out;
+  }
+
+  if (chase524Cards.length > 0) {
+    html += '<div class="sec-head">Phase 1 — Use Your Chase 5/24 Slots (' + chase524Cards.length + ' cards)</div><div class="steps">';
+    html += renderSteps(chase524Cards, 0);
+    html += '</div>';
+  }
+
+  if (non524Cards.length > 0) {
+    var phase2Label = cards524 >= 5 ? 'Your Full Roadmap — Non-5/24 Cards (' + non524Cards.length + ' cards)' : 'Phase 2 — Non-5/24 Cards, No Limit (' + non524Cards.length + ' cards)';
+    html += '<div class="sec-head" style="margin-top:20px">' + phase2Label + '</div>';
+    html += '<div class="wi purple" style="margin-bottom:14px"><div class="wi-icon">♾️</div><div style="font-size:.78rem;line-height:1.65">These cards have no velocity restrictions from 5/24. You can cycle through them continuously — once a bonus posts, apply for the next one.</div></div>';
+    html += '<div class="steps">';
+    html += renderSteps(non524Cards, chase524Cards.length);
+    html += '</div>';
+  }
 
   html += '<div class="sec-head" style="margin-top:20px">Timeline Rules</div>'
     + '<div class="warn-list"><div class="wi purple"><div class="wi-icon">📅</div>'
     + '<div style="font-size:.78rem;line-height:1.8">'
-    + '<strong>Month 1:</strong> Apply for #1. Set up autopay immediately.<br>'
-    + '<strong>Month 3:</strong> Once bonus posts, apply for #2.<br>'
-    + '<strong>Month 6:</strong> Apply for #3. Evaluate Year 1 fees coming up.<br>'
-    + '<strong>Hard Rule:</strong> Never more than 2 cards in 30 days.'
+    + '<strong>Spacing:</strong> Apply for one card every 3 months minimum.<br>'
+    + '<strong>Rule:</strong> Never more than 2 cards in 30 days.<br>'
+    + '<strong>Chase:</strong> Finish all Chase slots before moving to Phase 2.<br>'
+    + '<strong>Bonus timing:</strong> Wait for the bonus to post before applying for the next card.'
     + '</div></div></div>';
 
-  // HOW YOU'LL MAKE MONEY
+  // HOW YOU'LL MAKE MONEY — use allRoadmap
   var totalBonuses = top5.reduce(function(s,c) { return s + c.bonus; }, 0);
   var totalFees2 = top5.reduce(function(s,c) { return s + c.fee; }, 0);
   var totalCredits2 = top5.reduce(function(s,c) { return s + (c.credits || 0); }, 0);
