@@ -328,6 +328,30 @@ select option{background:var(--surface2);}
 
 <script>
 var DATA_URL = 'https://accold.github.io/churncoach/cards.json';
+
+// ═══════════════════════════════════════════════════
+// AFFILIATE LINKS — swap these when you get your URLs
+// Leave as '' to use the default bank application link
+// ═══════════════════════════════════════════════════
+var AFFILIATE_LINKS = {
+  'csp':      '',  // Chase Sapphire Preferred
+  'csr':      '',  // Chase Sapphire Reserve
+  'ibp':      '',  // Chase Ink Business Preferred
+  'ibu':      '',  // Chase Ink Business Unlimited
+  'ff':       '',  // Chase Freedom Flex
+  'amexplat': '',  // Amex Platinum
+  'amexgold': '',  // Amex Gold
+  'venturex': '',  // Capital One Venture X
+  'strata':   '',  // Citi Strata Premier
+  'doubecash':'',  // Citi Double Cash
+  'wfaj':     '',  // Wells Fargo Autograph Journey
+  'barcavoy': '',  // Barclays AAdvantage Aviator Red
+};
+// ═══════════════════════════════════════════════════
+
+function getApplyUrl(card) {
+  return AFFILIATE_LINKS[card.id] || card.applyUrl || '';
+}
 var CARDS = [];
 var dataInfo = { updatedAt: null, liveCount: 0, cardCount: 0, status: 'loading' };
 
@@ -378,18 +402,18 @@ async function refreshData() {
 }
 
 var FALLBACK_CARDS = [
-  { id:'csp', bank:'Chase', name:'Sapphire Preferred', type:'travel', bonus:750, bonusPts:'75,000 pts', minSpend:5000, days:90, fee:95, credits:50, cats:['travel','dining'], hasTransfers:true, rule524:true, minScore:700, roi:7.4, isBiz:false, easyMin:false, netVal:705, dataSource:'fallback', why:'Best starter travel card. $50 hotel credit offsets fee. Points transfer to 14 airlines/hotels.' },
-  { id:'csr', bank:'Chase', name:'Sapphire Reserve', type:'travel', bonus:750, bonusPts:'60,000 pts', minSpend:4000, days:90, fee:550, credits:300, cats:['travel','dining'], hasTransfers:true, rule524:true, minScore:720, roi:6.8, isBiz:false, easyMin:false, netVal:500, dataSource:'fallback', why:'$300 travel credit makes effective fee $250. Priority Pass lounge access.' },
-  { id:'ibp', bank:'Chase', name:'Ink Business Preferred', type:'business', bonus:1000, bonusPts:'100,000 pts', minSpend:8000, days:90, fee:95, credits:0, cats:['travel','online','office'], hasTransfers:true, rule524:false, minScore:700, roi:10.1, isBiz:true, easyMin:false, netVal:905, dataSource:'fallback', why:'DOES NOT count toward 5/24. Best bonus-to-fee ratio available.' },
-  { id:'ibu', bank:'Chase', name:'Ink Business Unlimited', type:'business', bonus:750, bonusPts:'$750 cash', minSpend:6000, days:90, fee:0, credits:0, cats:['online','office'], hasTransfers:false, rule524:false, minScore:680, roi:9.2, isBiz:true, easyMin:false, netVal:750, dataSource:'fallback', why:'No fee. Does NOT count toward 5/24.' },
-  { id:'ff', bank:'Chase', name:'Freedom Flex', type:'cashback', bonus:200, bonusPts:'$200 cash', minSpend:500, days:90, fee:0, credits:0, cats:['grocery','dining','online'], hasTransfers:false, rule524:true, minScore:670, roi:8.5, isBiz:false, easyMin:true, netVal:200, dataSource:'fallback', why:'Only $500 minimum — easiest bonus to hit.' },
-  { id:'amexplat', bank:'Amex', name:'Platinum Card', type:'travel', bonus:1500, bonusPts:'150,000 pts', minSpend:8000, days:180, fee:695, credits:600, cats:['travel'], hasTransfers:true, rule524:false, minScore:720, roi:8.6, isBiz:false, easyMin:false, netVal:1405, dataSource:'fallback', why:'Highest absolute welcome offer. Centurion Lounge access.' },
-  { id:'amexgold', bank:'Amex', name:'Gold Card', type:'travel', bonus:600, bonusPts:'60,000 pts', minSpend:6000, days:180, fee:250, credits:240, cats:['dining','grocery'], hasTransfers:true, rule524:false, minScore:700, roi:7.2, isBiz:false, easyMin:false, netVal:590, dataSource:'fallback', why:'4x on dining and US groceries. $120 dining credit.' },
-  { id:'venturex', bank:'Capital One', name:'Venture X', type:'travel', bonus:750, bonusPts:'75,000 miles', minSpend:4000, days:90, fee:395, credits:300, cats:['travel'], hasTransfers:true, rule524:false, minScore:720, roi:8.1, isBiz:false, easyMin:false, netVal:655, dataSource:'fallback', why:'$300 travel credit + anniversary miles effectively eliminate the fee.' },
-  { id:'strata', bank:'Citi', name:'Strata Premier', type:'travel', bonus:600, bonusPts:'75,000 pts', minSpend:4000, days:90, fee:95, credits:100, cats:['travel','dining','grocery','gas'], hasTransfers:true, rule524:false, minScore:700, roi:7.9, isBiz:false, easyMin:false, netVal:605, dataSource:'fallback', why:'Citi 48-month rule. Turkish Airlines transfer sweet spot.' },
-  { id:'doubecash', bank:'Citi', name:'Double Cash', type:'cashback', bonus:200, bonusPts:'$200 cash', minSpend:1500, days:90, fee:0, credits:0, cats:['everything'], hasTransfers:false, rule524:false, minScore:670, roi:7.2, isBiz:false, easyMin:true, netVal:200, dataSource:'fallback', why:'2% on everything, no fee.' },
-  { id:'wfaj', bank:'Wells Fargo', name:'Autograph Journey', type:'travel', bonus:400, bonusPts:'60,000 pts', minSpend:4000, days:90, fee:95, credits:50, cats:['hotels','dining','travel'], hasTransfers:true, rule524:false, minScore:690, roi:6.5, isBiz:false, easyMin:false, netVal:355, dataSource:'fallback', why:'Wells Fargo has NO velocity rules. Most forgiving major bank.' },
-  { id:'barcavoy', bank:'Barclays', name:'AAdvantage Aviator Red', type:'travel', bonus:600, bonusPts:'60,000 miles', minSpend:0, days:90, fee:99, credits:0, cats:['travel'], hasTransfers:false, rule524:false, minScore:680, roi:7.8, isBiz:false, easyMin:true, netVal:501, dataSource:'fallback', why:'Bonus after first purchase only — no min spend.' },
+  { id:'csp', applyUrl:'https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred', bank:'Chase', name:'Sapphire Preferred', type:'travel', bonus:750, bonusPts:'75,000 pts', minSpend:5000, days:90, fee:95, credits:50, cats:['travel','dining'], hasTransfers:true, rule524:true, minScore:700, roi:7.4, isBiz:false, easyMin:false, netVal:705, dataSource:'fallback', why:'Best starter travel card. $50 hotel credit offsets fee. Points transfer to 14 airlines/hotels.' },
+  { id:'csr', applyUrl:'https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve', bank:'Chase', name:'Sapphire Reserve', type:'travel', bonus:750, bonusPts:'60,000 pts', minSpend:4000, days:90, fee:550, credits:300, cats:['travel','dining'], hasTransfers:true, rule524:true, minScore:720, roi:6.8, isBiz:false, easyMin:false, netVal:500, dataSource:'fallback', why:'$300 travel credit makes effective fee $250. Priority Pass lounge access.' },
+  { id:'ibp', applyUrl:'https://creditcards.chase.com/business-credit-cards/ink/preferred', bank:'Chase', name:'Ink Business Preferred', type:'business', bonus:1000, bonusPts:'100,000 pts', minSpend:8000, days:90, fee:95, credits:0, cats:['travel','online','office'], hasTransfers:true, rule524:false, minScore:700, roi:10.1, isBiz:true, easyMin:false, netVal:905, dataSource:'fallback', why:'DOES NOT count toward 5/24. Best bonus-to-fee ratio available.' },
+  { id:'ibu', applyUrl:'https://creditcards.chase.com/business-credit-cards/ink/unlimited', bank:'Chase', name:'Ink Business Unlimited', type:'business', bonus:750, bonusPts:'$750 cash', minSpend:6000, days:90, fee:0, credits:0, cats:['online','office'], hasTransfers:false, rule524:false, minScore:680, roi:9.2, isBiz:true, easyMin:false, netVal:750, dataSource:'fallback', why:'No fee. Does NOT count toward 5/24.' },
+  { id:'ff', applyUrl:'https://creditcards.chase.com/cash-back-credit-cards/freedom/flex', bank:'Chase', name:'Freedom Flex', type:'cashback', bonus:200, bonusPts:'$200 cash', minSpend:500, days:90, fee:0, credits:0, cats:['grocery','dining','online'], hasTransfers:false, rule524:true, minScore:670, roi:8.5, isBiz:false, easyMin:true, netVal:200, dataSource:'fallback', why:'Only $500 minimum — easiest bonus to hit.' },
+  { id:'amexplat', applyUrl:'https://www.americanexpress.com/us/credit-cards/card/platinum/', bank:'Amex', name:'Platinum Card', type:'travel', bonus:1500, bonusPts:'150,000 pts', minSpend:8000, days:180, fee:695, credits:600, cats:['travel'], hasTransfers:true, rule524:false, minScore:720, roi:8.6, isBiz:false, easyMin:false, netVal:1405, dataSource:'fallback', why:'Highest absolute welcome offer. Centurion Lounge access.' },
+  { id:'amexgold', applyUrl:'https://www.americanexpress.com/us/credit-cards/card/gold-card/', bank:'Amex', name:'Gold Card', type:'travel', bonus:600, bonusPts:'60,000 pts', minSpend:6000, days:180, fee:250, credits:240, cats:['dining','grocery'], hasTransfers:true, rule524:false, minScore:700, roi:7.2, isBiz:false, easyMin:false, netVal:590, dataSource:'fallback', why:'4x on dining and US groceries. $120 dining credit.' },
+  { id:'venturex', applyUrl:'https://creditcards.capitalone.com/venture-x-credit-card/', bank:'Capital One', name:'Venture X', type:'travel', bonus:750, bonusPts:'75,000 miles', minSpend:4000, days:90, fee:395, credits:300, cats:['travel'], hasTransfers:true, rule524:false, minScore:720, roi:8.1, isBiz:false, easyMin:false, netVal:655, dataSource:'fallback', why:'$300 travel credit + anniversary miles effectively eliminate the fee.' },
+  { id:'strata', applyUrl:'https://www.citi.com/credit-cards/citi-strata-premier-credit-card', bank:'Citi', name:'Strata Premier', type:'travel', bonus:600, bonusPts:'75,000 pts', minSpend:4000, days:90, fee:95, credits:100, cats:['travel','dining','grocery','gas'], hasTransfers:true, rule524:false, minScore:700, roi:7.9, isBiz:false, easyMin:false, netVal:605, dataSource:'fallback', why:'Citi 48-month rule. Turkish Airlines transfer sweet spot.' },
+  { id:'doubecash', applyUrl:'https://www.citi.com/credit-cards/citi-double-cash-credit-card', bank:'Citi', name:'Double Cash', type:'cashback', bonus:200, bonusPts:'$200 cash', minSpend:1500, days:90, fee:0, credits:0, cats:['everything'], hasTransfers:false, rule524:false, minScore:670, roi:7.2, isBiz:false, easyMin:true, netVal:200, dataSource:'fallback', why:'2% on everything, no fee.' },
+  { id:'wfaj', applyUrl:'https://creditcards.wellsfargo.com/autograph-journey-visa-credit-card/', bank:'Wells Fargo', name:'Autograph Journey', type:'travel', bonus:400, bonusPts:'60,000 pts', minSpend:4000, days:90, fee:95, credits:50, cats:['hotels','dining','travel'], hasTransfers:true, rule524:false, minScore:690, roi:6.5, isBiz:false, easyMin:false, netVal:355, dataSource:'fallback', why:'Wells Fargo has NO velocity rules. Most forgiving major bank.' },
+  { id:'barcavoy', applyUrl:'https://cards.barclaycardus.com/banking/cards/aadvantage-aviator-red-world-elite-mastercard/', bank:'Barclays', name:'AAdvantage Aviator Red', type:'travel', bonus:600, bonusPts:'60,000 miles', minSpend:0, days:90, fee:99, credits:0, cats:['travel'], hasTransfers:false, rule524:false, minScore:680, roi:7.8, isBiz:false, easyMin:true, netVal:501, dataSource:'fallback', why:'Bonus after first purchase only — no min spend.' },
 ];
 
 function getChipVals(id) {
@@ -574,8 +598,8 @@ function runEngine() {
         + '<div style="font-size:.72rem;color:var(--accent);margin:3px 0">' + c.bonusPts + ' · $' + c.minSpend.toLocaleString() + ' in ' + c.days + 'd · $' + c.fee + '/yr fee · ~$' + Math.max(0, c.netVal) + ' net</div>'
         + '<div class="step-desc">' + c.why + '</div>'
         + (topFlag ? '<div style="font-size:.72rem;margin-top:5px;color:' + (topFlag.t === 'good' ? 'var(--accent)' : 'var(--warn)') + '">' + topFlag.m + '</div>' : '')
-        + '<div style="margin-top:7px"><span class="badge by">' + timingLabel(i) + '</span></div>'
-        + '</div></div>';
+        + '<div style="margin-top:10px;display:flex;align-items:center;gap:10px"><span class="badge by">' + timingLabel(i) + '</span>'
+        + (getApplyUrl(c) ? '<a href="' + getApplyUrl(c) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:var(--accent);color:#000;border-radius:5px;font-size:.68rem;font-weight:600;text-decoration:none;transition:all .2s" onmouseover="this.style.background=\'#00e07a\'" onmouseout="this.style.background=\'var(--accent)\'">Apply Now →</a>' : '') + '</div></div>';
     });
     return out;
   }
@@ -741,7 +765,7 @@ function filterCards(el, type) {
   document.getElementById('recGrid').innerHTML = list.map(function(c, i) {
     var netVal = c.netVal !== undefined ? c.netVal : (c.bonus - c.fee + (c.credits || 0));
     var sourceTag = c.dataSource === 'fallback' ? '<span class="src-fallback">⚠ cached</span>' : '<span class="src-live">● live</span>';
-    return '<div class="rec"><div class="rec-rank">' + (i+1) + '</div><div class="rec-bank">' + c.bank + '</div><div class="rec-name">' + c.name + '</div><div class="rec-bonus"><span class="rec-big">' + (c.bonusPts || c.bonus + ' pts') + '</span><span class="rec-unit">welcome bonus</span></div><div class="rec-rows"><div class="rec-row"><span>Min Spend</span><span>' + (c.minSpend === 0 ? 'None — 1st purchase' : '$' + c.minSpend.toLocaleString() + ' / ' + c.days + 'd') + '</span></div><div class="rec-row"><span>Net Value</span><span style="color:var(--accent)">~$' + Math.max(0, netVal) + '</span></div><div class="rec-row"><span>Annual Fee</span><span>' + (c.fee === 0 ? 'None' : '$' + c.fee + '/yr') + '</span></div><div class="rec-row"><span>5/24 Required</span><span>' + (c.rule524 ? 'Yes' : 'No') + '</span></div></div><div class="rec-why">💡 ' + c.why + '</div><div class="rec-source">' + sourceTag + ' <span style="color:var(--muted)">· ROI ' + c.roi + '/10</span></div><div class="roi-track"><div class="roi-fill" style="width:' + (c.roi * 10) + '%"></div></div></div>';
+    return '<div class="rec"><div class="rec-rank">' + (i+1) + '</div><div class="rec-bank">' + c.bank + '</div><div class="rec-name">' + c.name + '</div><div class="rec-bonus"><span class="rec-big">' + (c.bonusPts || c.bonus + ' pts') + '</span><span class="rec-unit">welcome bonus</span></div><div class="rec-rows"><div class="rec-row"><span>Min Spend</span><span>' + (c.minSpend === 0 ? 'None — 1st purchase' : '$' + c.minSpend.toLocaleString() + ' / ' + c.days + 'd') + '</span></div><div class="rec-row"><span>Net Value</span><span style="color:var(--accent)">~$' + Math.max(0, netVal) + '</span></div><div class="rec-row"><span>Annual Fee</span><span>' + (c.fee === 0 ? 'None' : '$' + c.fee + '/yr') + '</span></div><div class="rec-row"><span>5/24 Required</span><span>' + (c.rule524 ? 'Yes' : 'No') + '</span></div></div><div class="rec-why">💡 ' + c.why + '</div>' + (getApplyUrl(c) ? '<a href="' + getApplyUrl(c) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center;width:100%;margin-top:12px;padding:8px;background:var(--accent);color:#000;border-radius:6px;font-size:.7rem;font-weight:600;text-decoration:none;">Apply Now →</a>' : '') + '<div class="rec-source">' + sourceTag + ' <span style="color:var(--muted)">· ROI ' + c.roi + '/10</span></div><div class="roi-track"><div class="roi-fill" style="width:' + (c.roi * 10) + '%"></div></div></div>';
   }).join('');
 }
 
